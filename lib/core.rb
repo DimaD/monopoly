@@ -7,7 +7,7 @@ module Monopoly
   
     def initialize(options={})
       if f = options[:save]
-        @state = GameState.new(:from_save => f)
+        @state = GameState.from_save( f )
       end
     end
   
