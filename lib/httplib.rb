@@ -18,7 +18,7 @@ class HTTPRequest
     end
     
     @params = CGI::parse(@query_string)
-    
+    @params.each_pair { |key, val|  @params[key] = val[0] if (@params[key].length == 1) }
     @port, @address = Socket.unpack_sockaddr_in(s)
   end
   
