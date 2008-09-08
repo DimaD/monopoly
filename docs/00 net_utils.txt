@@ -1,0 +1,7 @@
+==== Сетевой протокол ====
+
+  * GetPlayers -> [ {Name, Ip, Ready, Id}+ ]
+  * NotifyReady
+  * NotifyNotReady
+  * Join(name) -> {Id, Rules, Save}
+  * GetGameStatus(GameID) -> {Save}

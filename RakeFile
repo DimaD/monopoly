@@ -1,0 +1,18 @@
+require 'rubygems'
+gem 'rake'
+require 'spec/rake/spectask'
+
+desc "Run all specs"
+Spec::Rake::SpecTask.new('specs') do |t|
+  t.libs << './lib'
+  
+  t.spec_files = FileList['./specs/*.rb']
+end
+
+desc "Run tests"
+task 'test' do
+  tests = FileList['tests/*_test.rb']
+  tests.each do |t|
+    ruby "-Ilib #{t}"
+  end
+end
