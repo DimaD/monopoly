@@ -10,7 +10,7 @@ class HTTPRequest
     first = lines.shift
     @method, @path, @version = first.split
     @query_string = @path.sub(/^\/[^\?]+\??/, '')
-    @file = @path.scan(/^\/?([^\?]+)\?/)
+    @file = @path.scan(/^\/([^\?]+)\??/).flatten.shift
 
     @headers = {}
     lines.each do |l| 
