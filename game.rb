@@ -12,14 +12,8 @@ $: << "./lib"
 
 require 'rubygems'
 require File.dirname(__FILE__) + '/core_extensions/extend'
-require 'lib/core'
 require "lib/server"
 require 'eventmachine'
-
-game = Monopoly::Core.new(:save => 'default')
-
-# game.save_game(:to_file => 'save.js')
-
 
 EventMachine::run {
   EventMachine::start_server "localhost", 8080, MonopolyServer
