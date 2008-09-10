@@ -1,33 +1,33 @@
 Buy:
 BuyFactory:
-    - Position: int
+    Position: int
 Sell:
-    - Position: int
+    Position: int
 SellFactory:
-    - Position: int
+    Position: int
 GetState:
 Deposit:
-    - Position: int
+    Position: int
 FinishMove:
 ThrowDice:
 ConfirmThrowDice:
-    - Dice1: int[1..6]
-    - Dice2: int[1..6]
-    - PositionId: int
+    Dice1: int[1..6]
+    Dice2: int[1..6]
+    PositionId: int
 TradeOffer:
-    - ID: int
-    - PlayerID: int
-    - Give: { Cash: int, PropertyIDs: array[int] }
-    - Wants: { Cash: int, PropertyIDs: array[int] }
+    ID: int
+    PlayerID: int
+    Give: { Cash: int, PropertyIDs: array[int] }
+    Wants: { Cash: int, PropertyIDs: array[int] }
 AssertOffer:
-    - ID: int
+    ID: int
 RejectOffer:
-    - ID: int
+    ID: int
 GetPlayers:
 NotifyReady:
 NotifyNotReady:
 Join:
-    - name: string
+    name: string
 GetGameStatus:
-    - GameID: id
+    GameID: id
     
