@@ -51,6 +51,8 @@ module Monopoly
         is_integer?(str)
       when 'string'
         str.length > 0
+      when /^int\[(\d+)..(\d+)\]$/
+        is_integer?( str, Integer($1), Integer($2) )
       end
     end
 
