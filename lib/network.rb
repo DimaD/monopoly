@@ -3,16 +3,18 @@ require 'exceptions'
 require 'httplib'
 require 'yaml'
 
+
 module Monopoly
 
   class Network
-    def initialize
-      @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
+    def initialize core
+      @core = core
     end
 
     def process request
       puts ">>> connection from #{request.address}:#{request.port} => #{request.path} : #{request.file}"
-      return error404 unless allowed_method( request.file )
+      return error404 unless @core.allowed_method?( request.file )
+      return error_params unless @core.valid_params?( request.file, request.params )
 
       return ok
     end
@@ -22,11 +24,12 @@ module Monopoly
     end
     
     def error404
-      "HTTP/1.1 404 Not Found\nContent-Type: text/plain\n\n"
+      "HTTP/1.1 404 Not Found\nContent-Type: text/plain\n\n404 Not Found"
     end
-    
-    def allowed_method m
-      @methods.has_key?(m)
+
+    def error_params
+      "HTTP/1.1 200 OK\nContent-Type: application/javascript\n\n" +
+      "{ 'Error' => { 'Code' => 200, 'Message' => 'wrong parameters' } }\n"
     end
   end
 

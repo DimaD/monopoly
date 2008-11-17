@@ -12,7 +12,7 @@ def core
 end
 
 def monopoly
-  @monopoly ||= Monopoly::Network.new()
+  @monopoly ||= Monopoly::Network.new( core )
 end
 
 class MonopolyServer  < EventMachine::Connection
