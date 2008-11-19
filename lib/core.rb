@@ -1,10 +1,21 @@
 require 'game_state'
 require 'exceptions'
+require 'find'
+require 'rules'
 
 module Monopoly
-  
+  def self.available_rules
+    conf_rules =  File.dirname(__FILE__) + "/../conf/rules"
+    rules = []
+    Find.find( conf_rules ) do |f|
+      if !FileTest.directory?(f) && (File.dirname(f) == conf_rules)
+        rules << Monopoly::Rules.new( File.basename(f, ".js") )
+      end
+    end
+    rules
+  end
+
   class Core
-  
     def initialize(options={})
       if f = options[:save]
         @state = GameState.from_save( f )

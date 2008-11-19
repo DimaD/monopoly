@@ -2,8 +2,28 @@
 <head>
   <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
   <title>Monopoly</title>
+
+  <link rel="stylesheet" href="/static/css/blueprint/screen.css" type="text/css" media="screen, projection">
+  <link rel="stylesheet" href="/static/css/blueprint/print.css" type="text/css" media="print"> 
+  <!--[if IE]>
+    <link rel="stylesheet" href="/static/css/blueprint/ie.css" type="text/css" media="screen, projection">
+  <![endif]-->
+  
+  <link rel="stylesheet" href="/static/css/main.css" type="text/css" media="screen"> 
 </head>
 <body>
-  <%= content %>
+  <div class="container">
+    <div classs="span-24">
+      <h1>Монополия</h1>
+      <hr />
+    </div>
+    <% if error && error.length > 0 %>
+    <div class="span-24 notice">
+      <%= error %>
+    </div>
+    <% end %>
+    
+    <%= content %>
+  </div>
 </body>
 </html>

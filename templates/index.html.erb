@@ -1,5 +1,37 @@
-<h1>Соединиться с сервером</h1>
-<form action="/connect" method="get" accept-charset="utf-8">
-  Адрес: <input type="text" name="address" value="" id="address"/>
-  <p><input type="submit" value="Continue &rarr;"/></p>
-</form>
+<div class="span-12">
+  <h2>Новая игра</h2>
+  <% if !rules.blank? %>
+  <form action="/new_game" method="post" accept-charset="utf-8">
+    <p>Правила:</p>
+    <ul class="no-bullets">
+    <% for r in rules %>
+      <li>
+        <label>
+          <input type="radio" name="rules" value="<% r.rules_file %>" />&nbsp;
+          <%= r.name %> (<%= r.max_players %>)
+        </label>
+      </li>
+    <% end %>
+    </ul>
+      <p><input type="submit" value="Continue &rarr;"/></p>
+    </form>
+  <% else %>
+    
+  <% end %>
+  
+</div>
+<div class="span-12 last">
+  <h2>Соединиться с сервером</h2>
+  <form action="/connect" method="post" accept-charset="utf-8">
+    <p>
+      <label for="address">Адрес сервера</label><br/>
+      <input type="text" class="text" name="address" value="" id="address"/>
+    </p>
+    <p>
+      <label for="name">Имя</label><br/>
+      <input type="text" class="text" name="name" value="" id="name"/>
+    </p>
+
+    <p><input type="submit" value="Continue &rarr;"/></p>
+  </form>
+</div>

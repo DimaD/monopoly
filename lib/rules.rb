@@ -5,10 +5,10 @@ require 'exceptions'
 
 module Monopoly
   class Rules
-    
+    attr_reader :rules_file
     def initialize(config=nil)
-      config = config.nil? ? 'default' : config
-      path = "./conf/rules/#{config}.js"
+      @rules_file = config.nil? ? 'default' : config
+      path = "./conf/rules/#{@rules_file}.js"
       File.exist?(path) || raise(NoFile.new(path), "no such rules '#{path}'")
       
       File.open(path, "r") do |file|
