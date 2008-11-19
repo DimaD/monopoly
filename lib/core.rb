@@ -45,25 +45,28 @@ module Monopoly
       return true
     end
 
-    def check_type type, str
+    def check_type type, obj
       case type
       when 'int'
-        is_integer?(str)
+        is_integer?(obj)
       when 'string'
-        str.length > 0
+        obj.length > 0
       when /^int\[(\d+)..(\d+)\]$/
-        is_integer?( str, Integer($1), Integer($2) )
+        is_integer?( obj, Integer($1), Integer($2) )
+      when 'array[int]'
+        is_array_int? obj
+      else
+        type.map { |name, val| check_type val, obj[name] }.all? { |e| e == true }
       end
     end
 
-    def is_integer? str, n1=0, n2=0
-      begin
-        i = Integer( str )
-        return n2 > 0 ? (i >= n1 and i <= n2) : i >= n1
-      rescue ArgumentError
-        return false
-      end
+    def is_integer? i, n1=0, n2=0
+      return false unless i.is_a?(Integer)
+      return n2 > 0 ? (i >= n1 and i <= n2) : i >= n1
     end
 
+    def is_array_int? arr
+      v = arr.all? { |e| is_integer?(e) }
+    end
   end #class Core
 end
