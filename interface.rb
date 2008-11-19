@@ -52,6 +52,7 @@ module Interface::Controllers
         render :index
       else
         @core = Interface::get_core
+        @network = Interface::get_network
         render :game
       end
     end

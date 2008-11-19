@@ -1,2 +1,8 @@
 <h2>Игра</h2>
 <p>Правила: <%= core.rules_name %></p>
+<p>Игроки:</p>
+<ol>
+<% network.maybe_players.each do |p| %>
+  <li><%= p %></li>
+<% end %>
+</ol>

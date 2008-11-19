@@ -7,7 +7,10 @@ require 'yaml'
 module Monopoly
 
   class Network
+    attr_reader :maybe_players
+
     def initialize core
+      @maybe_players = []
       @core = core
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
     end
@@ -21,7 +24,19 @@ module Monopoly
         return error500(e.message)
       end
 
-      return ok
+      method_name = request.file.underscore
+      if respond_to?(method_name)
+        send(method_name, request.params)
+      elsif @core.respond_to?(method_name)
+        @core.send( method_name, request.params )
+      else
+        error500 "No method #{method}"
+      end
+    end
+
+    def join params
+      @maybe_players << params['name']
+      ok
     end
 
     def ok
