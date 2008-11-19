@@ -1,13 +1,19 @@
+<% if error && error.length > 0 %>
+<div class="span-24 notice">
+  <%= error %>
+</div>
+<% end %>
+
 <div class="span-12">
   <h2>Новая игра</h2>
   <% if !rules.blank? %>
-  <form action="/new_game" method="post" accept-charset="utf-8">
+  <form action="new_game" method="post" accept-charset="utf-8">
     <p>Правила:</p>
     <ul class="no-bullets">
-    <% for r in rules %>
+    <% rules.each_with_index do |r, i| %>
       <li>
         <label>
-          <input type="radio" name="rules" value="<% r.rules_file %>" />&nbsp;
+          <input type="radio" name="rules" value="<%= r.rules_file %>" <% if i == 0 %>checked="checked"<% end %> />&nbsp;
           <%= r.name %> (<%= r.max_players %>)
         </label>
       </li>
@@ -22,7 +28,7 @@
 </div>
 <div class="span-12 last">
   <h2>Соединиться с сервером</h2>
-  <form action="/connect" method="post" accept-charset="utf-8">
+  <form action="connect" method="post" accept-charset="utf-8">
     <p>
       <label for="address">Адрес сервера</label><br/>
       <input type="text" class="text" name="address" value="" id="address"/>

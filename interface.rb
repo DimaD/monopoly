@@ -3,6 +3,7 @@ $: << "./lib"
 require 'rubygems'
 require 'camping'
 require 'cookie_sessions'
+require 'network'
 
 begin
   require 'erubis'
@@ -12,6 +13,8 @@ rescue
 end
 
 require 'core'
+
+$core = nil
 
 Camping.goes :Interface
 
@@ -23,6 +26,19 @@ module Interface
     content = ERB.new(IO.read("templates/layout.html.erb")).result(binding) if layout
     return content
   end
+
+  def self.get_core
+    $core || nil
+  end
+
+  def self.get_network
+    $network || nil
+  end
+
+  def self.set_core c
+    $core = c
+    $network = Monopoly::Network.new( c )
+  end
 end
 
 module Interface::Controllers
@@ -31,8 +47,13 @@ module Interface::Controllers
   class Index < R '/'
     def get
       @error = @state.delete(:error) || false
-      @rules = Monopoly::available_rules
-      render :index 
+      if Interface::get_core.nil?
+        @rules = Monopoly::available_rules
+        render :index
+      else
+        @core = Interface::get_core
+        render :game
+      end
     end
   end
 
@@ -46,19 +67,32 @@ module Interface::Controllers
       end
     end
   end
+
+  class NewGame < R '/new_game'
+    def post
+      if ( @input[:rules].length > 0 )
+        Interface::set_core( Monopoly::Core.new( :rules => @input[:rules] ) )
+      else
+        @state[:error] = 'Необходимо выбрать правила'
+      end
+      redirect Index
+    end
+  end
 end
 
 
 require 'mongrel'
 require 'mongrel/camping'
-
+require 'monopoly_handler'
 if __FILE__ == $0
-  config = Mongrel::Configurator.new :host => "localhost" do
+  config = Mongrel::Configurator.new :host => "ibook.local" do
     listener :port => 3000 do
       debug "/", what = [:access]
+      debug "/interface/", what = [:access]
       uri "/static", :handler => Mongrel::DirHandler.new("static")
       uri "/favicon.ico", :handler => Mongrel::Error404Handler.new("")
-      uri "/", :handler => Mongrel::Camping::CampingHandler.new(Interface)
+      uri "/interface/", :handler => Mongrel::Camping::CampingHandler.new(Interface)
+      uri "/", :handler => Mongrel::MonopolyHandler.new() { Interface::get_network }
     end
   end
   puts "Starting server on port 3000..."

@@ -25,20 +25,21 @@ module Monopoly
     end
 
     def ok
-      "HTTP/1.1 200 OK\nContent-Type: text/plain\n\nOK\n"
+      [200, { "Content-Type" => 'text/plain' }, "OK\n"]
     end
     
     def error404
-      "HTTP/1.1 404 Not Found\nContent-Type: text/plain\n\n404 Not Found"
+      [ 404, { "Content-Type" => 'text/plain' }, "404 Not Found\n"]
     end
 
     def error500 message=''
-      "HTTP/1.1 505 Server Error\nContent-Type: text/plain\n\n#{message}"
+      [ 500, { "Content-Type" => 'text/plain' }, message]
     end
 
     def error_params
-      "HTTP/1.1 200 OK\nContent-Type: application/javascript\n\n" +
-      "{ 'Error' => { 'Code' => 200, 'Message' => 'wrong parameters' } }\n"
+      [ 200, { "Content-Type" => 'application/javascript' },
+        "{ 'Error' => { 'Code' => 200, 'Message' => 'wrong parameters' } }\n"
+      ]
     end
 
     def convert_params method, params

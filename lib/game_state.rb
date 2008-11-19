@@ -50,11 +50,15 @@ module Monopoly
     
     def generate_state
       raise RuntimeError, "Can't produce state without rules" if @rules.nil?
-      raise RuntimeError, "State is alredy exist" if @state.not.nil?
+      raise RuntimeError, "State is alredy exist" if !@state.nil?
       
       @state = Hash.new
       @state["Turn"] = 1;
-      @state["Rules"] = rules.name;
+      @state["Rules"] = @rules.name;
+    end
+
+    def rules_name
+      @rules.name
     end
   end
 end

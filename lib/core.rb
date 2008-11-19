@@ -19,6 +19,8 @@ module Monopoly
     def initialize(options={})
       if f = options[:save]
         @state = GameState.from_save( f )
+      elsif f = options[:rules]
+        @state = GameState.from_rules( f )
       end
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
     end
@@ -44,6 +46,10 @@ module Monopoly
 
     def allowed_method? m
       @methods.has_key?( m )
+    end
+
+    def rules_name
+      @state.rules_name
     end
 
     def valid_params? m, params

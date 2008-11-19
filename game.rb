@@ -10,12 +10,10 @@
 #####
 $: << "./lib"
 
-require 'rubygems'
-require File.dirname(__FILE__) + '/core_extensions/extend'
 require "lib/server"
-require 'eventmachine'
+require 'core'
 
-EventMachine::run {
-  EventMachine::start_server "localhost", 8080, MonopolyServer
-  puts "Start listening ..."
-}
+core = Monopoly::Core.new( :rules => 'default' )
+
+start_monopoly_server core
+p 123123
