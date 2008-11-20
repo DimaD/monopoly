@@ -2,7 +2,7 @@
 <p>Правила: <%= core.rules_name %></p>
 <p>Игроки:</p>
 <ol>
-<% network.maybe_players.each do |p| %>
-  <li><%= p %></li>
+<% network.players.each_pair do |k, v| %>
+  <li><%= v %></li>
 <% end %>
 </ol>

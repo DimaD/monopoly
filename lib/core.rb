@@ -52,6 +52,18 @@ module Monopoly
       @state.rules_name
     end
 
+    def plain_rules
+      @state.plain_rules
+    end
+
+    def state
+      @state.state
+    end
+
+    def new_player name
+      @state.new_player(name)
+    end
+
     def valid_params? m, params
       return false unless allowed_method? m
 

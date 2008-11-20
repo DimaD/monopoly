@@ -2,15 +2,15 @@ require 'game_state'
 require 'exceptions'
 require 'httplib'
 require 'yaml'
-
+require 'json'
 
 module Monopoly
 
   class Network
-    attr_reader :maybe_players
+    attr_reader :players
 
     def initialize core
-      @maybe_players = []
+      @players = {}
       @core = core
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
     end
@@ -25,8 +25,8 @@ module Monopoly
       end
 
       method_name = request.file.underscore
-      if respond_to?(method_name)
-        send(method_name, request.params)
+      if respond_to?(method_name, request)
+        send(method_name, request)
       elsif @core.respond_to?(method_name)
         @core.send( method_name, request.params )
       else
@@ -34,15 +34,22 @@ module Monopoly
       end
     end
 
-    def join params
-      @maybe_players << params['name']
-      ok
+    def join req
+      pl = @core.new_player( req.params['name'] )
+      @players[req.address] = pl
+      report_join pl.id
+    end
+
+    def report_join id
+      [ 200, { "Content-Type" => 'application/javascript' },
+        JSON.pretty_generate( { "Join" => { "ID" => id,"Rules" => @core.plain_rules, "State" => @core.state} } )
+      ]
     end
 
     def ok
       [200, { "Content-Type" => 'text/plain' }, "OK\n"]
     end
-    
+
     def error404
       [ 404, { "Content-Type" => 'text/plain' }, "404 Not Found\n"]
     end

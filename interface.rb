@@ -86,7 +86,7 @@ require 'mongrel'
 require 'mongrel/camping'
 require 'monopoly_handler'
 if __FILE__ == $0
-  config = Mongrel::Configurator.new :host => "ibook.local" do
+  config = Mongrel::Configurator.new :host => "localhost" do
     listener :port => 3000 do
       debug "/", what = [:access]
       debug "/interface/", what = [:access]

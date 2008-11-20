@@ -3,6 +3,7 @@ require 'json'
 require 'active_support'
 require 'exceptions'
 require 'rules'
+require 'player'
 
 module Monopoly
   class GameState
@@ -51,14 +52,27 @@ module Monopoly
     def generate_state
       raise RuntimeError, "Can't produce state without rules" if @rules.nil?
       raise RuntimeError, "State is alredy exist" if !@state.nil?
-      
+
+      @players_count = 0
       @state = Hash.new
-      @state["Turn"] = 1;
+      @state["Turn"] = -1;
       @state["Rules"] = @rules.name;
+      @state["Players"] = []
+    end
+
+    def new_player name
+      @players_count += 1
+      player = Player.new( name, @players_count, @rules.starting_money, 0 )
+      @state["Players"] << player
+      player
     end
 
     def rules_name
       @rules.name
+    end
+
+    def plain_rules
+      @rules.plain_rules
     end
   end
 end

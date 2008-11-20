@@ -22,13 +22,20 @@ module Mongrel
         return
       end
 
-      pa = req.params
-      params = HttpRequest.query_parse( pa['QUERY_STRING'] );
-      file = pa['REQUEST_PATH'].sub("/", "")
-      port, address = Socket.unpack_sockaddr_in(req.socket.getsockname)
-      r = MonopolyHTTPRequest.new( file, pa, params, address, port )
-
-      response res, n.process( r )
+      begin
+        pa = req.params
+        params = HttpRequest.query_parse( pa['QUERY_STRING'] );
+        file = pa['REQUEST_PATH'].sub("/", "")
+        port, address = Socket.unpack_sockaddr_in(req.socket.getsockname)
+        r = MonopolyHTTPRequest.new( file, pa, params, address, port )
+        
+        response res, n.process( r )
+      rescue Exception => e
+        response res, [ 500, { 'Content-Type' => 'text/plain'}, e.message ]
+        p "Exception: #{e.message}"
+        raise
+      end
+      
     end
 
     def response res, result

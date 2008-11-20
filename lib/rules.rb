@@ -24,9 +24,13 @@ module Monopoly
         raise NoMethodError, "no setting #{name}"
       end
     end
-    
+
+    def plain_rules
+      @rules
+    end
+
     def to_json
-      JSON.pretty_generate({"Rules" => @rule})
+      JSON.pretty_generate({"Rules" => @rules})
     end
     
     def check
