@@ -39,6 +39,15 @@ module Interface
     $core = c
     $network = Monopoly::Network.new( c )
   end
+
+  def self.set_player p
+    $player = p
+  end
+
+  def self.get_player
+    $player
+  end
+  
 end
 
 module Interface::Controllers
@@ -53,6 +62,7 @@ module Interface::Controllers
       else
         @core = Interface::get_core
         @network = Interface::get_network
+        @player  = Interface::get_player
         render :game
       end
     end
@@ -71,10 +81,11 @@ module Interface::Controllers
 
   class NewGame < R '/new_game'
     def post
-      if ( @input[:rules].length > 0 )
+      unless ( @input[:rules].nil? || @input[:name].nil?)
         Interface::set_core( Monopoly::Core.new( :rules => @input[:rules] ) )
+        Interface::set_player Interface::get_core.new_player(@input[:name])
       else
-        @state[:error] = 'Необходимо выбрать правила'
+        @state[:error] = 'Необходимо выбрать правила и указать желаемое имя'
       end
       redirect Index
     end

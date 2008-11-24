@@ -1,8 +1,10 @@
 <h2>Игра</h2>
 <p>Правила: <%= core.rules_name %></p>
-<p>Игроки:</p>
+<p>Сетевые Игроки:</p>
 <ol>
 <% network.players.each_pair do |k, v| %>
   <li><%= v %></li>
 <% end %>
 </ol>
+
+<p>Локальный Игрок: <%= player %></p>
