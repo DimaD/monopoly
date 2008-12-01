@@ -3,6 +3,8 @@ require 'exceptions'
 require 'httplib'
 require 'yaml'
 require 'json'
+require 'core'
+require 'net/http'
 
 module Monopoly
 
@@ -13,6 +15,12 @@ module Monopoly
       @players = {}
       @core = core
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
+    end
+
+    def self.connect_to_server address, name
+      js = Request.join( "http://#{address}", name )
+      core = Monopoly::Core.new( :json => js["Join"]["Rules"] )
+      return [core, Network.new(core) ]
     end
 
     def process request
@@ -102,4 +110,19 @@ module Monopoly
     end
   end
 
+  class Request
+    def self.join(address, name)
+      uri = URI.parse(address)
+      res = Net::HTTP.get(uri.host, '/Join?name=' + name, uri.port)
+      raise RequestError if res.nil?
+
+      js = JSON.parse(res)
+      raise RequestError, js if self.error?(js)
+      return js
+    end
+
+    def self.error? js
+      js.has_key?("Error")
+    end
+  end
 end

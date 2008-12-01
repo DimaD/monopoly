@@ -59,7 +59,10 @@ module Interface
   def self.get_player
     $player
   end
-  
+
+  def self.connect_to_server(address, name)
+    ($core, $network) = Monopoly::Network.connect_to_server( address, name )
+  end
 end
 
 module Interface::Controllers
@@ -82,12 +85,16 @@ module Interface::Controllers
 
   class Connect < R '/connect'
     def post
-      if (@input[:name].length > 0) && (@input[:address].length > 0)
-        render :connect
+      if correct_input?
+        Interface::connect_to_server(@input[:address], @input[:name])
       else
         @state[:error] = 'Введите адрес сервера и желаемое имя пользователя'
-        redirect Index
       end
+      redirect Index
+    end
+
+    def correct_input?
+      (@input[:name].length > 0) && (@input[:address].length > 0)
     end
   end
 

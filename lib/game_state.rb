@@ -33,18 +33,26 @@ module Monopoly
         a.state = JSON.load(file)["State"] || {}
       end
       
-      a.rules = Monopoly::Rules.new(a.rules)
+      a.rules = Monopoly::Rules.from_file(a.rules)
       a.check
       return a
     end
     
     def self.from_rules(s="default")
       a = self.new
-      a.rules = Monopoly::Rules.new(s)
+      a.rules = Monopoly::Rules.from_file(s)
       a.generate_state
       return a
     end
-    
+
+    def self.from_js js
+      a = self.new
+      a.rules = Monopoly::Rules.from_js(js)
+      a.generate_state
+      p a
+      a
+    end
+
     def check
       # players.length <= @rules.max_players
     end

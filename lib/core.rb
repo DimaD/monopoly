@@ -9,7 +9,7 @@ module Monopoly
     rules = []
     Find.find( conf_rules ) do |f|
       if !FileTest.directory?(f) && (File.dirname(f) == conf_rules)
-        rules << Monopoly::Rules.new( File.basename(f, ".js") )
+        rules << Monopoly::Rules.from_file( File.basename(f, ".js") )
       end
     end
     rules
@@ -21,6 +21,8 @@ module Monopoly
         @state = GameState.from_save( f )
       elsif f = options[:rules]
         @state = GameState.from_rules( f )
+      elsif js = options[:json]
+        @state = GameState.from_js( js )
       end
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
     end
