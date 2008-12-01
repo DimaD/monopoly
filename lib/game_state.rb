@@ -45,11 +45,10 @@ module Monopoly
       return a
     end
 
-    def self.from_js js
+    def self.from_js rules_js, state
       a = self.new
-      a.rules = Monopoly::Rules.from_js(js)
-      a.generate_state
-      p a
+      a.rules = Monopoly::Rules.from_js(rules_js)
+      a.state = state
       a
     end
 

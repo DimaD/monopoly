@@ -19,7 +19,7 @@ module Monopoly
 
     def self.connect_to_server address, name
       js = Request.join( "http://#{address}", name )
-      core = Monopoly::Core.new( :json => js["Join"]["Rules"] )
+      core = Monopoly::Core.new( :json => js["Join"]["Rules"], :state => js["Join"]["State"] )
       return [core, Network.new(core) ]
     end
 

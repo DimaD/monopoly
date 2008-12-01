@@ -21,8 +21,8 @@ module Monopoly
         @state = GameState.from_save( f )
       elsif f = options[:rules]
         @state = GameState.from_rules( f )
-      elsif js = options[:json]
-        @state = GameState.from_js( js )
+      elsif st = options[:state]
+        @state = GameState.from_js( options[:json], st )
       end
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
     end
