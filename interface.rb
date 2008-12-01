@@ -1,5 +1,6 @@
 #!/usr/local/bin/ruby
 $: << "./lib"
+require 'optparse'
 require 'rubygems'
 require 'camping'
 require 'cookie_sessions'
@@ -13,6 +14,17 @@ rescue
 end
 
 require 'core'
+
+options = {
+  :port => 8080,
+}
+
+OptionParser.new("Dmitiry Dzema monopoly client.") do |opts|
+  opts.on("-p", "--port PORT", "Port to bind") do |p|
+    options[:port] = Integer(p)
+  end
+end.parse!
+
 
 $core = nil
 
@@ -98,7 +110,7 @@ require 'mongrel/camping'
 require 'monopoly_handler'
 if __FILE__ == $0
   config = Mongrel::Configurator.new :host => "localhost" do
-    listener :port => 3000 do
+    listener :port => options[:port] do
       debug "/", what = [:access]
       debug "/interface/", what = [:access]
       uri "/static", :handler => Mongrel::DirHandler.new("static")
@@ -107,6 +119,6 @@ if __FILE__ == $0
       uri "/", :handler => Mongrel::MonopolyHandler.new() { Interface::get_network }
     end
   end
-  puts "Starting server on port 3000..."
+  puts "Starting server on port #{options[:port]}..."
   config.run.join()
 end
