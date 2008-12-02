@@ -4,6 +4,9 @@ end
 class MonopolyCheckException < Exception
 end
 
+class MonopolyGameError < Exception
+end
+
 class NoFile < Exception
   attr_reader :file
   

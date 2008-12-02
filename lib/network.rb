@@ -28,17 +28,17 @@ module Monopoly
       begin
         return error404 unless @core.allowed_method?( request.file )
         return error_params unless @core.valid_params?( request.file, convert_params(request.file, request.params) )  
+
+        method_name = request.file.underscore
+        if respond_to?(method_name, request)
+          send(method_name, request)
+        elsif @core.respond_to?(method_name)
+          @core.send( method_name, request.params )
+        else
+          error500 "No method #{method}"
+        end
       rescue Exception => e
         return error500(e.message)
-      end
-
-      method_name = request.file.underscore
-      if respond_to?(method_name, request)
-        send(method_name, request)
-      elsif @core.respond_to?(method_name)
-        @core.send( method_name, request.params )
-      else
-        error500 "No method #{method}"
       end
     end
 

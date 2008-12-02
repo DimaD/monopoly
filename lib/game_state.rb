@@ -19,7 +19,7 @@ module Monopoly
     #     raise NoMethodError, "no setting #{name}"
     #   end
     # end
-    
+
     def to_json
       JSON.pretty_generate({"State" => @state})
     end
@@ -68,6 +68,7 @@ module Monopoly
     end
 
     def new_player name
+      raise MonopolyGameError, "no more players allowed" if @players_count >= @rules.max_players
       @players_count += 1
       player = Player.new( name, @players_count, @rules.starting_money, 0 )
       @state["Players"] << player
