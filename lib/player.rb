@@ -1,13 +1,14 @@
 module Monopoly
   class Player
-    attr_reader :name, :id, :posession, :cash, :position_id
+    attr_reader :name, :game_id, :posession, :cash, :position_id, :ready
 
-    def initialize(name, id, cash, position_id)
+    def initialize(name, id, cash, position_id, ready=false, posession=[])
       @name = name
-      @id = id
-      @posession = []
+      @game_id = id
+      @posession = posession
       @cash = cash
       @position_id = position_id
+      @ready = ready;
     end
 
     def to_s
@@ -17,7 +18,8 @@ module Monopoly
     def to_json(*a)
       { "Player" => {
           'Name'         => @name,
-          'Id'           => @id,
+          'Id'           => @game_id,
+          'Ready'        => @ready,
           'Cash'         => @cash,
           'Posession'    => @posession,
           'PositionId'   => @position_id,

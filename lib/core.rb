@@ -66,13 +66,24 @@ module Monopoly
       @state.new_player(name)
     end
 
+    def get_player id
+      @state.get_player(id)
+    end
+
+    def get_player_or_new *a
+      @state.get_player_or_new(*a)
+    end
+
     def valid_params? m, params
       return false unless allowed_method? m
 
       valid_params = @methods[m]
-      valid_params.each_pair do |name, type|
-        return false unless params.has_key?(name) and check_type( type, params[name] )
+      unless valid_params.nil?
+        valid_params.each_pair do |name, type|
+          return false unless params.has_key?(name) and check_type( type, params[name] )
+        end
       end
+
       return true
     end
 

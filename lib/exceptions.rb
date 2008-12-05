@@ -7,6 +7,9 @@ end
 class MonopolyGameError < Exception
 end
 
+class RequestError < Exception
+end
+
 class NoFile < Exception
   attr_reader :file
   

@@ -49,6 +49,7 @@ module Monopoly
       a = self.new
       a.rules = Monopoly::Rules.from_js(rules_js)
       a.state = state
+      a.generate_state
       a
     end
 
@@ -58,21 +59,56 @@ module Monopoly
     
     def generate_state
       raise RuntimeError, "Can't produce state without rules" if @rules.nil?
-      raise RuntimeError, "State is alredy exist" if !@state.nil?
 
-      @players_count = 0
-      @state = Hash.new
-      @state["Turn"] = -1;
-      @state["Rules"] = @rules.name;
-      @state["Players"] = []
+      @players_count ||= 0
+
+      @state ||= Hash.new
+      @state["Turn"] ||= -1;
+      @state["Rules"] ||= @rules.name;
+
+      if @state["Players"]
+        translate_to_objects @state["Players"]
+      else
+        @state["Players"] = []
+      end
+
+      @players ||= {}
     end
 
     def new_player name
       raise MonopolyGameError, "no more players allowed" if @players_count >= @rules.max_players
-      @players_count += 1
-      player = Player.new( name, @players_count, @rules.starting_money, 0 )
+      @players_count = players_count + 1
+      set_player Player.new( name, @players_count, @rules.starting_money, 0 )
+    end
+
+    def get_player id
+      @players ||= {}
+      @players[id]
+    end
+
+    def get_player_or_new id, name, ready, cash=false, position=0, posession=[]
+      pl = get_player id
+      if pl.nil?
+        cash ||= @rules.starting_money
+        pl = Player.new( name, id, cash, position, ready, posession)
+        @players_count = [id, players_count].max
+        set_player pl
+      end
+      pl
+    end
+
+    def set_player player
       @state["Players"] << player
+      @players[player.game_id] = player
       player
+    end
+
+    def translate_to_objects pls
+      players = pls.clone
+      players.each { |pl|
+        e = pl["Player"]
+        get_player_or_new e["Id"], e["Name"], false, e["Cash"], e["PositionId"], e["Possession"]
+      }
     end
 
     def rules_name
@@ -81,6 +117,10 @@ module Monopoly
 
     def plain_rules
       @rules.plain_rules
+    end
+
+    def players_count
+      @players_count ||= 0
     end
   end
 end

@@ -23,10 +23,15 @@ OptionParser.new("Dmitiry Dzema monopoly client.") do |opts|
   opts.on("-p", "--port PORT", "Port to bind") do |p|
     options[:port] = Integer(p)
   end
+  opts.on("-d", "--default", "Start with default params") do |p|
+    options[:default] = p
+  end
+  
 end.parse!
 
 
 $core = nil
+$options = options
 
 Camping.goes :Interface
 
@@ -61,7 +66,8 @@ module Interface
   end
 
   def self.connect_to_server(address, name)
-    ($core, $network) = Monopoly::Network.connect_to_server( address, name )
+    ($core, $network) = Monopoly::Network.connect_to_server( address, name, $options[:port] )
+    $player = $network.local_player
   end
 end
 
@@ -102,7 +108,7 @@ module Interface::Controllers
     def post
       unless ( @input[:rules].nil? || @input[:name].nil?)
         Interface::set_core( Monopoly::Core.new( :rules => @input[:rules] ) )
-        Interface::set_player Interface::get_core.new_player(@input[:name])
+        Interface::set_player Interface::get_network.new_local_player(@input[:name])
       else
         @state[:error] = 'Необходимо выбрать правила и указать желаемое имя'
       end
@@ -127,5 +133,10 @@ if __FILE__ == $0
     end
   end
   puts "Starting server on port #{options[:port]}..."
+  if options[:default]
+    Interface::set_core( Monopoly::Core.new( :rules => 'save' ) )
+    Interface::set_player Interface::get_network.new_local_player('Default Player')
+    puts "Starting default game"
+  end
   config.run.join()
 end

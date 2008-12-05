@@ -8,7 +8,7 @@ class MonopolyHTTPRequest
     @cgi_params = cgi_params
     @params = params
     @address = address
-    @port = port
+    @port = @params.delete('_port') || ''
     @method = @cgi_params['REQUEST_METHOD']
     @version = @cgi_params['HTTP_VERSION']
   end

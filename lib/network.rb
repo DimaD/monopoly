@@ -5,22 +5,31 @@ require 'yaml'
 require 'json'
 require 'core'
 require 'net/http'
+require 'utils'
+DEFAULT_PORT = 80
 
 module Monopoly
 
   class Network
-    attr_reader :players
+    attr_reader :players, :local_player, :local_port
+    attr_writer :local_player
 
-    def initialize core
+    def initialize core, local_port=DEFAULT_PORT
       @players = {}
       @core = core
+      @local_port = DEFAULT_PORT
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
     end
 
-    def self.connect_to_server address, name
-      js = Request.join( "http://#{address}", name )
+    def self.connect_to_server address, name, local_port
+      js = Request.join( "http://#{address}", name, local_port )
       core = Monopoly::Core.new( :json => js["Join"]["Rules"], :state => js["Join"]["State"] )
-      return [core, Network.new(core) ]
+      n = Network.new(core, local_port)
+      n.local_player = core.get_player( Integer(js["Join"]["Id"]) );
+
+      players = Request.get_players( "http://#{address}", local_port )
+      n.merge_players( _substitute_address(players['GetPlayers'], "#{address}"))
+      return [core, n]
     end
 
     def process request
@@ -37,20 +46,69 @@ module Monopoly
         else
           error500 "No method #{method}"
         end
-      rescue Exception => e
-        return error500(e.message)
+      # rescue Exception => e
+      #   return error500(e.message)
       end
     end
 
     def join req
-      pl = @core.new_player( req.params['name'] )
-      @players[req.address] = pl
-      report_join pl.id
+      if @players["#{req.address}:#{req.port}"]
+        report_player_exist
+      else 
+        pl = @core.new_player( req.params['name'] )
+        @players["#{req.address}:#{req.port}"] = pl
+        report_join pl.game_id
+      end
+    end
+
+    def get_players req
+      ret = [
+        _serialize_player( @local_player, '-1' ),
+        @players.map { |addr, pl| _serialize_player pl, addr }
+      ].flatten
+      report_players ret
+    end
+
+    def _serialize_player pl, addr
+      { 
+        "Id"    => pl.game_id,
+        "Ip"    => addr,
+        "Ready" => pl.ready,
+        "Name"  => pl.name
+      }
+    end
+
+    def new_local_player name
+      return @local_player if @local_player
+      @local_player = @core.new_player( name )
+    end
+
+    def merge_players pls
+      pls.each do |e|
+        unless Integer(e["Id"]) == @local_player.game_id
+          @players[e["Ip"]] = @core.get_player_or_new(Integer(e["Id"]), e["Name"], e["Ready"])
+        end
+      end
+    end
+
+    def report_players pl
+      [ 200, { "Content-Type" => 'application/javascript' },
+        JSON.pretty_generate( { "GetPlayers" => pl} )
+      ]
+    end
+
+    def report_player_exist
+      [ 200, { "Content-Type" => 'application/javascript' },
+        JSON.pretty_generate({
+          'Error' => {
+            'Code'  => 200,
+            'Message' => 'player from this addresss already joined'
+      }})]
     end
 
     def report_join id
       [ 200, { "Content-Type" => 'application/javascript' },
-        JSON.pretty_generate( { "Join" => { "ID" => id,"Rules" => @core.plain_rules, "State" => @core.state} } )
+        JSON.pretty_generate( { "Join" => { "Id" => id,"Rules" => @core.plain_rules, "State" => @core.state} } )
       ]
     end
 
@@ -83,7 +141,7 @@ module Monopoly
     def convert_param method, name, value
       m = @methods[method]
       type = m[name] if m
-      raise ArgumentError unless type
+      raise ArgumentError, "method: #{method} name: #{name}" unless type
 
       case type
       when 'int'
@@ -111,9 +169,8 @@ module Monopoly
   end
 
   class Request
-    def self.join(address, name)
-      uri = URI.parse(address)
-      res = Net::HTTP.get(uri.host, '/Join?name=' + name, uri.port)
+    def self.join(address, name, local_port)
+      res = self.get(address, "/Join?name=#{name}&_port=#{local_port}")
       raise RequestError if res.nil?
 
       js = JSON.parse(res)
@@ -121,8 +178,22 @@ module Monopoly
       return js
     end
 
+    def self.get_players address, local_port
+      res = self.get(address, '/GetPlayers')
+      raise RequestError if res.nil?
+
+      js = JSON.parse(res)
+      raise RequestError, js if self.error?(js)
+      return js
+    end
+
+    def self.get addr, url
+      Net::HTTP.get(URI.parse(addr + url))
+    end
+
     def self.error? js
       js.has_key?("Error")
     end
+
   end
 end
