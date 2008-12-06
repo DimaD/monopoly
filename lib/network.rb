@@ -169,8 +169,16 @@ module Monopoly
   end
 
   class Request
-    def self.join(address, name, local_port)
-      res = self.get(address, "/Join?name=#{name}&_port=#{local_port}")
+    def initialize local_port
+      @local_port = local_port
+    end
+
+    def join address, name
+      get(address, "Join", { 'name' => name } )
+    end
+
+    def get_players address
+      res = get(address, 'GetPlayers')
       raise RequestError if res.nil?
 
       js = JSON.parse(res)
@@ -178,22 +186,36 @@ module Monopoly
       return js
     end
 
-    def self.get_players address, local_port
-      res = self.get(address, '/GetPlayers')
+    def notify_ready address
+      get address, 'NotifyReady'
+    end
+
+    def notify_not_ready address
+      get address, 'NotifyNotReady'
+    end
+
+    def get addr, url, params={}
+      params["_port"] ||= @local_port
+      uri = URI.parse( "#{addr}/#{url}?#{encode_params(params)}" )
+      res = Net::HTTP.get( uri )
       raise RequestError if res.nil?
 
       js = JSON.parse(res)
-      raise RequestError, js if self.error?(js)
+      raise RequestError, js if error?(js)
       return js
     end
 
-    def self.get addr, url
-      Net::HTTP.get(URI.parse(addr + url))
-    end
-
-    def self.error? js
+    def error? js
       js.has_key?("Error")
     end
 
+    def encode_params prs
+      s = prs.inject("") do |mem, kv|
+        key, value = kv
+        encoded = value.to_s.gsub(' ', '%20')
+        mem += "#{key}=#{encoded}&"
+      end
+      s.gsub( /(&)$/, '' )
+    end
   end
 end
