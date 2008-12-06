@@ -6,11 +6,13 @@ require 'json'
 require 'core'
 require 'net/http'
 require 'utils'
+
 DEFAULT_PORT = 80
 
 module Monopoly
 
   class Network
+    include Reports
     attr_reader :players, :local_player, :local_port
     attr_writer :local_player
 
@@ -71,6 +73,24 @@ module Monopoly
       report_players ret
     end
 
+    def notify_ready req
+      set_ready req, true
+    end
+
+    def notify_not_ready req
+      set_ready req, false
+    end
+
+    def set_ready request, ready
+      pl = @players["#{request.address}:#{request.port}"]
+      if !pl.nil?
+        pl.ready = ready
+        ok
+      else
+        report_player_unknown
+      end
+    end
+
     def _serialize_player pl, addr
       { 
         "Id"    => pl.game_id,
@@ -91,45 +111,6 @@ module Monopoly
           @players[e["Ip"]] = @core.get_player_or_new(Integer(e["Id"]), e["Name"], e["Ready"])
         end
       end
-    end
-
-    def report_players pl
-      [ 200, { "Content-Type" => 'application/javascript' },
-        JSON.pretty_generate( { "GetPlayers" => pl} )
-      ]
-    end
-
-    def report_player_exist
-      [ 200, { "Content-Type" => 'application/javascript' },
-        JSON.pretty_generate({
-          'Error' => {
-            'Code'  => 200,
-            'Message' => 'player from this addresss already joined'
-      }})]
-    end
-
-    def report_join id
-      [ 200, { "Content-Type" => 'application/javascript' },
-        JSON.pretty_generate( { "Join" => { "Id" => id,"Rules" => @core.plain_rules, "State" => @core.state} } )
-      ]
-    end
-
-    def ok
-      [200, { "Content-Type" => 'text/plain' }, "OK\n"]
-    end
-
-    def error404
-      [ 404, { "Content-Type" => 'text/plain' }, "404 Not Found\n"]
-    end
-
-    def error500 message=''
-      [ 500, { "Content-Type" => 'text/plain' }, message]
-    end
-
-    def error_params
-      [ 200, { "Content-Type" => 'application/javascript' },
-        "{ 'Error' => { 'Code' => 200, 'Message' => 'wrong parameters' } }\n"
-      ]
     end
 
     def convert_params method, params
