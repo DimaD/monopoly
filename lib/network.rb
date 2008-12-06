@@ -18,16 +18,18 @@ module Monopoly
       @players = {}
       @core = core
       @local_port = DEFAULT_PORT
+      @requester = Request.new( @local_port )
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
     end
 
     def self.connect_to_server address, name, local_port
-      js = Request.join( "http://#{address}", name, local_port )
+      req = Request.new(local_port)
+      js = req.join( "http://#{address}", name )
       core = Monopoly::Core.new( :json => js["Join"]["Rules"], :state => js["Join"]["State"] )
       n = Network.new(core, local_port)
       n.local_player = core.get_player( Integer(js["Join"]["Id"]) );
 
-      players = Request.get_players( "http://#{address}", local_port )
+      players = req.get_players( "http://#{address}" )
       n.merge_players( _substitute_address(players['GetPlayers'], "#{address}"))
       return [core, n]
     end
@@ -178,12 +180,7 @@ module Monopoly
     end
 
     def get_players address
-      res = get(address, 'GetPlayers')
-      raise RequestError if res.nil?
-
-      js = JSON.parse(res)
-      raise RequestError, js if self.error?(js)
-      return js
+      get(address, 'GetPlayers')
     end
 
     def notify_ready address
