@@ -61,7 +61,7 @@ module Monopoly
       else 
         pl = @core.new_player( req.params['name'] )
         @players["#{req.address}:#{req.port}"] = pl
-        report_join pl.game_id
+        report_join pl.game_id, @core.plain_rules, @core.state
       end
     end
 
@@ -71,6 +71,10 @@ module Monopoly
         @players.map { |addr, pl| _serialize_player pl, addr }
       ].flatten
       report_players ret
+    end
+
+    def get_state req
+      report_state @core.state
     end
 
     def notify_ready req

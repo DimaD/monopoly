@@ -13,10 +13,14 @@ module Reports
     report_error 'player from this addresss already joined'
   end
 
-  def report_join id
+  def report_join id, rules, state
     [ 200, { "Content-Type" => 'application/javascript' },
-      JSON.pretty_generate( { "Join" => { "Id" => id,"Rules" => @core.plain_rules, "State" => @core.state} } )
+      JSON.pretty_generate( { "Join" => { "Id" => id,"Rules" => rules, "State" => state} } )
     ]
+  end
+
+  def report_state state
+    report_json( { 'State' => state } )
   end
 
   def report_player_unknown
@@ -31,6 +35,10 @@ module Reports
           'Message' => message
     }})]
     
+  end
+
+  def report_json obj
+    [ 200, { "Content-Type" => 'application/javascript' }, JSON.pretty_generate(obj) ]
   end
 
   def ok
