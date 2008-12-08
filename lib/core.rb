@@ -74,6 +74,10 @@ module Monopoly
       @state.get_player_or_new(*a)
     end
 
+    def game_started?
+      @state.game_started?
+    end
+
     def valid_params? m, params
       return false unless allowed_method? m
 

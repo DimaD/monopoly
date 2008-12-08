@@ -122,5 +122,9 @@ module Monopoly
     def players_count
       @players_count ||= 0
     end
+
+    def game_started?
+      @state["Turn"] > 0;
+    end
   end
 end

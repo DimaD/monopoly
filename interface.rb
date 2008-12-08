@@ -65,6 +65,19 @@ module Interface
     $player
   end
 
+  def self.get_field_map
+    return nil if !self.get_core
+    return $field_map if $field_map
+
+    rules = self.get_core.rules_name
+    dir = File.dirname(__FILE__)
+    if File.exist?("#{dir}/static/maps/#{rules}/map.png")
+      $field_map = rules
+    else
+      nil
+    end
+  end
+
   def self.connect_to_server(address, name)
     ($core, $network) = Monopoly::Network.connect_to_server( address, name, $options[:port] )
     $player = $network.local_player
@@ -84,6 +97,7 @@ module Interface::Controllers
         @core = Interface::get_core
         @network = Interface::get_network
         @player  = Interface::get_player
+        @field_map = Interface::get_field_map
         render :game
       end
     end

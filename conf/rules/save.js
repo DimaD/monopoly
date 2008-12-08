@@ -1,7 +1,7 @@
 {
   "Rules": {
     "StartingMoney": 100,
-    "Name": "dimad's default rules",
+    "Name": "dimad_default_rules",
     "Groups": [
 
     ],

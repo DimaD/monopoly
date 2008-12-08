@@ -1,10 +1,28 @@
-<h2>Игра</h2>
-<p>Правила: <%= core.rules_name %></p>
-<p>Сетевые Игроки:</p>
-<ol>
-<% network.players.each_pair do |k, v| %>
-  <li><%= v %></li>
+<% if error && error.length > 0 %>
+<div class="span-24 notice">
+  <%= error %>
+</div>
 <% end %>
-</ol>
 
-<p>Локальный Игрок: <%= player %></p>
+<div class="span-18">
+  <%= render '_field', false %>
+</div>
+
+<div class="span-6 last">
+  <p>Ход:
+    <% if @core.game_started? %> 
+      <%= @core.turn_number %>
+    <% else %>
+      <a href="begin_game">Начать игру</a>
+    <% end %>
+  </p>
+  <p>Правила: <%= @core.rules_name %></p>
+  <p>Сетевые Игроки:</p>
+  <ol>
+  <% @network.players.each_pair do |k, v| %>
+    <li><%= v %> (<%= v.cash %>)</li>
+  <% end %>
+  </ol>
+
+  <p>Локальный Игрок: <strong><%= @player.name %></strong> (<%= @player.cash %>)</p>
+</div>
