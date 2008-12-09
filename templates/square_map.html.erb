@@ -1,0 +1,31 @@
+<table id="map">
+  <% l = @field_map[:length]; props = @core.positions; size = props.size - 1; %>
+  <% corners = [0, l-1, 2*(l-1), 3*(l-1), 4*(l-1)] %>
+  <tr>
+    <% 0.upto(l-1) do |i| %>
+      <% pos = get_position(i) %>
+      <td class="<%= class_for_pos(pos) %> <% if corners.member?(i) %>corner<%end%>" id="position_<%= pos.Id %>"><%= name_for_pos(pos) %></td>
+    <% end %>
+  </tr>
+  <% 0.upto(l-3) do |i| %>
+  <tr>
+    <% pos = get_position(size-i) %>
+    <td class="<%= class_for_pos(pos) %>" id="position_<%= pos.Id %>"><%= name_for_pos(pos) %></td>
+
+
+    <% 0.upto(l-3) do |j| %>
+      <td>&nbsp;</td>
+    <% end %>
+
+    <% pos = get_position(l+i) %>
+    <td class="<%= class_for_pos(pos) %>" id="position_<%= pos.Id %>"><%= name_for_pos(pos) %></td>
+
+  </tr>
+  <% end %>
+  <tr>
+    <% 0.upto(l-1) do |i| %>
+      <% pos = get_position(size-l-i+2) %>
+      <td class="<%= class_for_pos(pos) %> <% if corners.member?(i) %>corner<%end%>" id="position_<%= pos.Id %>"><%= name_for_pos(pos) %></td>
+    <% end %>
+  </tr>
+</table>

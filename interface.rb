@@ -5,6 +5,7 @@ require 'rubygems'
 require 'camping'
 require 'cookie_sessions'
 require 'network'
+require 'mhelpers'
 
 begin
   require 'erubis'
@@ -37,6 +38,8 @@ Camping.goes :Interface
 
 module Interface
   include Camping::CookieSessions
+  include MHelpers
+
   @@state_secret = "JI0ZspUChfzIyGwlfjRJI0ZspUChfzIyGwlfjRuv8CCVXhrJZmOlxYMrPGTznUhnAEzGpuv8CCVXhrJZmOlxYMrPGJI0ZspUChfzIyGwlfjRuv8CCVXhrJZmOlxYMrPGTznUhnAEzGpTznUhnAEzGp";
   def render(m, layout=true)
     content = ERB.new(IO.read("templates/#{m}.html.erb")).result(binding)
@@ -68,13 +71,13 @@ module Interface
   def self.get_field_map
     return nil if !self.get_core
     return $field_map if $field_map
-
-    rules = self.get_core.rules_name
-    dir = File.dirname(__FILE__)
-    if File.exist?("#{dir}/static/maps/#{rules}/map.png")
-      $field_map = rules
+    props = self.get_core.positions
+    l = props.size # + start + empty corner
+    if l.modulo(4) == 0
+      n = l/4 + 1
+      $field_map = { :type => :square, :length => n }
     else
-      nil
+      $field_map = { :type => :seq, :length => l }
     end
   end
 
@@ -89,7 +92,7 @@ module Interface::Controllers
    # The root slash shows the `index' view.
   class Index < R '/'
     def get
-      @error = @state.delete(:error) || false
+      @error = !@state.nil? && @state.delete(:error) || false
       if Interface::get_core.nil?
         @rules = Monopoly::available_rules
         render :index
@@ -148,7 +151,7 @@ if __FILE__ == $0
   end
   puts "Starting server on port #{options[:port]}..."
   if options[:default]
-    Interface::set_core( Monopoly::Core.new( :rules => 'save' ) )
+    Interface::set_core( Monopoly::Core.new( :rules => 'buxter' ) )
     Interface::set_player Interface::get_network.new_local_player('Default Player')
     puts "Starting default game"
   end

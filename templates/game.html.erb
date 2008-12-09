@@ -4,11 +4,15 @@
 </div>
 <% end %>
 
-<div class="span-18">
-  <%= render '_field', false %>
+<div class="span-24 last">
+  <% if @field_map[:type] == :square %>
+    <%= render 'square_map', false %>
+  <% else %>
+    <%= render 'seq_map', false %>
+  <% end %>
 </div>
 
-<div class="span-6 last">
+<div class="span-5">
   <p>Ход:
     <% if @core.game_started? %> 
       <%= @core.turn_number %>
@@ -17,12 +21,36 @@
     <% end %>
   </p>
   <p>Правила: <%= @core.rules_name %></p>
-  <p>Сетевые Игроки:</p>
+
+  <h4>Локальный Игрок</h4>
+  <strong><%= @player.name %></strong> (<%= @player.cash %>/<%= @player.position_id %>)</p>
+  
+  <br />
+  <h4>Сетевые Игроки</h4>
   <ol>
   <% @network.players.each_pair do |k, v| %>
     <li><%= v %> (<%= v.cash %>)</li>
   <% end %>
   </ol>
-
-  <p>Локальный Игрок: <strong><%= @player.name %></strong> (<%= @player.cash %>)</p>
+  
 </div>
+
+<script>
+  var _positions_to_load = <%= @core.positions.to_json %>;
+  load_positions(_positions_to_load);
+  var _properties_to_load = <%= @core.properties.to_json %>;
+  load_properties(_properties_to_load);
+
+  var _players_to_load = [ <%= @player.to_js %>, <%= @network.players.map { |pl| pl[1].to_js }.join(',') %>];
+  load_players(_players_to_load);
+
+  $(".player").tooltip({
+    bodyHandler: player_tooltip,
+    showURL: false
+  });
+  
+  $(".property").tooltip({
+    bodyHandler: property_tooltip,
+    showURL: false
+  })
+</script>

@@ -4,6 +4,7 @@ require 'active_support'
 require 'exceptions'
 require 'rules'
 require 'player'
+require 'ostruct'
 
 module Monopoly
   class GameState
@@ -72,6 +73,20 @@ module Monopoly
         @state["Players"] = []
       end
 
+      positions = @rules.board["Positions"]
+      props = @rules.properties
+
+      @positions = {}
+      positions.each do |pos|
+        po = OpenStruct.new(pos)
+        if !po.IsJail && !po.IsEvent && po.PropertyId != -1
+          property = props.find { |pr| pr["Id"] == po.PropertyId }
+          raise RulesError, "No property with id #{pos.PropertyId}" if property.nil?
+          po.property = OpenStruct.new(property)
+        end
+        @positions[po.Id] = po
+      end
+
       @players ||= {}
     end
 
@@ -113,6 +128,22 @@ module Monopoly
 
     def rules_name
       @rules.name
+    end
+
+    def properties
+      @rules.properties
+    end
+
+    def property_for_position pos
+      @position[pos].property
+    end
+
+    def get_position i
+      @positions[i]
+    end
+
+    def positions
+      @rules.board["Positions"]
     end
 
     def plain_rules

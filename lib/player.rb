@@ -1,3 +1,5 @@
+require 'json'
+
 module Monopoly
   class Player
     attr_reader :name, :game_id, :posession, :cash, :position_id, :ready
@@ -26,6 +28,10 @@ module Monopoly
           'PositionId'   => @position_id,
         }
       }.to_json(*a)
+    end
+
+    def to_js
+      JSON.generate( self )
     end
   end
 end

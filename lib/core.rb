@@ -78,6 +78,22 @@ module Monopoly
       @state.game_started?
     end
 
+    def properties
+      @state.properties
+    end
+
+    def property_for_position pos
+      @state.property_for_position pos
+    end
+
+    def get_position i
+      @state.get_position(i)
+    end
+
+    def positions
+      @state.positions
+    end
+
     def valid_params? m, params
       return false unless allowed_method? m
 
