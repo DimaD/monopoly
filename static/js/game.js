@@ -18,17 +18,25 @@ function load_players(players){
   var l = players_icons.length;
   for (var i = 0; i < players.length; i++) {
     var pl = players[i]["Player"];
-    pl.icon = players_icons[ i % 10];
+    pl.icon = players_icons[ (pl.Id-1) % 10 ];
     add_player(pl)
   }
 }
 
 function add_player(pl){
-  if (_players_i[pl.Id])
-    return;
+  // if (_players_i[pl.Id])
+  //   return;
 
   _players.push(pl);
   _players_i[pl.Id] = pl;
+  if (pl.Possession) {
+    for (var i=0; i < pl.Possession.length; i++) {
+      p = pl.Possession[i];
+      console.log(p);
+      _properties[p.PropertyId]["owner"] = pl;
+      _properties[p.PropertyId]["factories"] = p.Factories;    
+    }
+  }
 
   var img = document.createElement('img');
   img.id = 'player_' + pl.Id;
@@ -78,11 +86,15 @@ function property_tooltip(){
   var prop = _properties_positions[id];
   var str = '<h3>' + prop.Name + '</h3>';
   str += '<div class="body">';
+    if (prop.owner) {
+      str += '<p>Хозяин: ' + prop.owner.Name + '</p>';
+      str += '<p>Стоимость посещения: <strong>' + prop['Rent' + prop.factories] + '</strong> (' + prop.factories + ')</p>';
+    }
     str += '<p>Цена: <strong>' + prop.Price + '</strong></p>';
-    str += '<p>Цена за 1 магазин: '  + prop.Rent0 + '</p>';
-    str += '<p>Цена за 2 магазина: ' + prop.Rent1 + '</p>';
-    str += '<p>Цена за 3 магазина: '  + prop.Rent2 + '</p>';
-    str += '<p>Цена за 4 магазина: '  + prop.Rent3 + '</p>';
+    str += '<p>Цена посещения: '  + prop.Rent0 + '</p>';
+    str += '<p>Цена за 1 магазин: ' + prop.Rent1 + '</p>';
+    str += '<p>Цена за 2 магазина: '  + prop.Rent2 + '</p>';
+    str += '<p>Цена за 3 магазина: '  + prop.Rent3 + '</p>';
   str += '</div>';
   return str;
 }
