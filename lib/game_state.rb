@@ -90,6 +90,12 @@ module Monopoly
       @players ||= {}
     end
 
+    def start_game
+      if !game_started?
+        @state["Turn"] = 1;
+      end
+    end
+
     def new_player name
       raise MonopolyGameError, "no more players allowed" if @players_count >= @rules.max_players
       @players_count = players_count + 1
@@ -152,6 +158,10 @@ module Monopoly
 
     def players_count
       @players_count ||= 0
+    end
+
+    def turn_number
+      @state["Turn"]
     end
 
     def game_started?

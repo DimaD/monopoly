@@ -2,8 +2,8 @@ require 'json'
 
 module Monopoly
   class Player
-    attr_reader :name, :game_id, :posession, :cash, :position_id, :ready
-    attr_writer :ready
+    attr_reader :name, :game_id, :posession, :cash, :position_id, :ready, :send_join
+    attr_writer :ready, :send_join
 
     def initialize(name, id, cash, position_id, ready=false, posession=[])
       @name = name
@@ -11,7 +11,12 @@ module Monopoly
       @posession = posession
       @cash = cash
       @position_id = position_id
-      @ready = ready;
+      @ready = ready
+      @send_join = false
+    end
+
+    def first_player?
+      @game_id == 1
     end
 
     def to_s

@@ -12,6 +12,7 @@ DEFAULT_PORT = 80
 module Monopoly
 
   class Network
+    include Enumerable
     include Reports
     attr_reader :players, :local_player, :local_port
     attr_writer :local_player
@@ -19,7 +20,7 @@ module Monopoly
     def initialize core, local_port=DEFAULT_PORT
       @players = {}
       @core = core
-      @local_port = DEFAULT_PORT
+      @local_port = local_port
       @requester = Request.new( @local_port )
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
     end
@@ -32,7 +33,9 @@ module Monopoly
       n.local_player = core.get_player( Integer(js["Join"]["Id"]) );
 
       players = req.get_players( "http://#{address}" )
-      n.merge_players( _substitute_address(players['GetPlayers'], "#{address}"))
+      req.notify_ready( "http://#{address}" )
+
+      n.merge_players( _substitute_address(players['GetPlayers'], address), address)
       return [core, n]
     end
 
@@ -65,6 +68,23 @@ module Monopoly
       end
     end
 
+    def can_start?
+      pl = if @players.empty?
+        true
+      else
+        @players.all? { |addr, pl| pl.ready }
+      end
+      pl && !@core.game_started?
+    end
+
+    def start_game
+      raise MonopolyError, "can't start game" if !can_start?
+      @requester.send_all( @players.keys, :notify_ready )
+      @local_player.ready = true
+
+      @core.start_game
+    end
+
     def get_players req
       ret = [
         _serialize_player( @local_player, '-1' ),
@@ -78,7 +98,11 @@ module Monopoly
     end
 
     def notify_ready req
-      set_ready req, true
+      res = set_ready req, true
+      if can_start? && !@local_player.first_player?
+        @core.start_game
+      end
+      res
     end
 
     def notify_not_ready req
@@ -109,10 +133,18 @@ module Monopoly
       @local_player = @core.new_player( name )
     end
 
-    def merge_players pls
+    def merge_players pls, sender
       pls.each do |e|
         unless Integer(e["Id"]) == @local_player.game_id
-          @players[e["Ip"]] = @core.get_player_or_new(Integer(e["Id"]), e["Name"], e["Ready"])
+          pl = @core.get_player_or_new(Integer(e["Id"]), e["Name"], e["Ready"])
+          if e["Ip"] == sender
+            pl.send_join = true
+          end
+          @players[e["Ip"]] = pl
+          if !pl.send_join
+            @requester.join( e['Ip'], @local_player.name )
+            @requester.notify_ready( e['Ip'] ) if !pl.send_join
+          end
         end
       end
     end
@@ -160,6 +192,10 @@ module Monopoly
       @local_port = local_port
     end
 
+    def send_all arr, method, *a
+      arr.each { |pl| send(method, pl, *a) }
+    end
+
     def join address, name
       get(address, "Join", { 'name' => name } )
     end
@@ -178,13 +214,18 @@ module Monopoly
 
     def get addr, url, params={}
       params["_port"] ||= @local_port
+
+      addr = "http://" + addr.sub(/^http:\/\//, '').sub(/^::1/, 'localhost')
+
       uri = URI.parse( "#{addr}/#{url}?#{encode_params(params)}" )
-      res = Net::HTTP.get( uri )
+      res = Net::HTTP.get_response( uri )
       raise RequestError if res.nil?
 
-      js = JSON.parse(res)
-      raise RequestError, js if error?(js)
-      return js
+      if ( res.content_type == 'application/javascript' )
+        js = JSON.parse(res.body())
+        raise RequestError, js if error?(js)
+        return js
+      end
     end
 
     def error? js

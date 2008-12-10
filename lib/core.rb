@@ -46,6 +46,14 @@ module Monopoly
       @state.not.nil?
     end
 
+    def start_game
+      @state.start_game
+    end
+
+    def turn_number
+      @state.turn_number
+    end
+
     def allowed_method? m
       @methods.has_key?( m )
     end

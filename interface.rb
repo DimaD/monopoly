@@ -57,7 +57,7 @@ module Interface
 
   def self.set_core c
     $core = c
-    $network = Monopoly::Network.new( c )
+    $network = Monopoly::Network.new( c, $options[:port] )
   end
 
   def self.set_player p
@@ -128,6 +128,19 @@ module Interface::Controllers
         Interface::set_player Interface::get_network.new_local_player(@input[:name])
       else
         @state[:error] = 'Необходимо выбрать правила и указать желаемое имя'
+      end
+      redirect Index
+    end
+  end
+
+  class BeginGame < R '/begin_game'
+    def get
+      if Interface::get_core.nil? || Interface::get_network.nil?
+        @state[:error] = 'Нельзя начать, если вы не инициализириовали игру'
+      elsif !Interface::get_network.can_start?
+        @state[:error] = 'Нельзя начинать, не все игроки готовы'
+      else
+        Interface::get_network.start_game
       end
       redirect Index
     end

@@ -29,7 +29,7 @@ module Mongrel
         file = pa['REQUEST_PATH'].sub("/", "")
         port, address = Socket.unpack_sockaddr_in(req.socket.getsockname)
         r = MonopolyHTTPRequest.new( file, pa, params, address, port )
-        
+
         response res, n.process( r )
       rescue Exception => e
         response res, [ 500, { 'Content-Type' => 'text/plain'}, e.message ]

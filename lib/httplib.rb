@@ -7,7 +7,7 @@ class MonopolyHTTPRequest
     @file = file
     @cgi_params = cgi_params
     @params = params
-    @address = address
+    @address = address.gsub( /^::1/, 'localhost' )
     @port = @params.delete('_port') || ''
     @method = @cgi_params['REQUEST_METHOD']
     @version = @cgi_params['HTTP_VERSION']
