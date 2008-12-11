@@ -90,9 +90,10 @@ module Monopoly
 
     def sell pl, pid
       prop = pl.property_at( pid )
+      raise MonopolyGameError, "Player #{pl.name} don't have property at position #{pid}" if prop.nil?
       pl.sell( prop )
       pl.cash += prop.Price
-      add_event "Игрок #{pl.name} продал карточку #{prop.Name} банку"
+      @state.add_event "Игрок #{pl.name} продал карточку #{prop.Name} банку"
     end
 
     def finish_game

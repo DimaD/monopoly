@@ -3,12 +3,16 @@ require 'json/add/core'
 
 class GreedyNetwork < Monopoly::Network
   def process request
-    p "process"
-    r = super
-    if my_move?
-      Thread.new(self) { |a| sleep(0.5); a.lock.synchronize { a.process_logic } }
+    if @thread.nil?
+      @thread = Thread.new(self) do |s|
+        while true
+          sleep(1)
+          s.process_logic
+        end
+      end
     end
-    r
+
+    super
   end
 
   def process_logic

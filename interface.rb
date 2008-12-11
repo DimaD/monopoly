@@ -215,6 +215,20 @@ module Interface::Controllers
     end
   end
 
+  class Sell < R '/sell'
+    def get
+      if Interface::get_core.nil? || Interface::get_network.nil?
+        @state[:error] = 'Нельзя продавать, если вы не инициализириовали игру'
+      elsif !Interface::get_core.game_started?
+        @state[:error] = 'Нельзя продавать, пока игра не началась'
+      elsif @input[:id].nil?
+        @state[:error] = "Нужно указать карточку для продажи, ага"
+      else
+        Interface::get_network.sell_card( Integer( @input[:id] ) )
+      end
+      redirect Index
+    end
+  end
 end
 
 

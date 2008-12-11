@@ -21,7 +21,7 @@ module Monopoly
     end
 
     def get_property id
-      @posession.find { |p| p.game_id == id }
+      @posession.find { |p| p.Id == id }
     end
 
     def property_at pid
@@ -34,7 +34,7 @@ module Monopoly
     end
 
     def sell prop
-      property = get_property(prop.Id)
+      property = get_property( prop.Id )
       raise MonopolyGameError, "Don't own property #{prop.Id} #{prop.Name}" if property.nil?
 
       remove_posession prop
@@ -48,9 +48,9 @@ module Monopoly
     end
 
     def remove_posession pos
-      raise MonopolyGameError, "Can't remove posession with factories" if pr.factories > 0
+      raise MonopolyGameError, "Can't remove posession with factories" if pos.factories > 0
   
-      pr.owner = nil
+      pos.owner = nil
       @posession.reject! { |pr| pr.PropertyId == pos.PropertyId }
     end
 

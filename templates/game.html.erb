@@ -20,7 +20,7 @@
     <h5>Владения</h5>
     <ul>
     <% for pos in @player.posession %>
-      <li class="<%= class_for_prop pos %>"><%= pos.Name %>. магазинов: <%= pos.factories %>, цена прохода: <%= pos.kickback %></li>
+      <li class="<%= class_for_prop pos %>"><%= pos.Name %>. магазинов: <%= pos.factories %>, цена прохода: <%= pos.kickback %> (<a href="sell?id=<%= pos.position_id %>">Продать в банк</a>)</li>
     <% end %>
     </ul>  
   <% end %>

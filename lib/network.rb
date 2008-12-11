@@ -219,6 +219,11 @@ module Monopoly
       ok
     end
 
+    def sell_card pos_id
+      @core.sell( @local_player, pos_id )
+      @requester.send_all( @players.keys, :sell, pos_id )
+    end
+
     def sell req
       return report_not_started if !@core.game_started?
 
