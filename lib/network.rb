@@ -381,6 +381,10 @@ module Monopoly
       get address, 'FinishMove'
     end
 
+    def sell address, id
+      get address, 'Sell', { 'Position' => id }
+    end
+
     def get addr, url, params={}
       params["_port"] ||= @local_port
 
