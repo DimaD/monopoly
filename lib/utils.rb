@@ -2,6 +2,10 @@ def _substitute_address pls, address
   pls.each { |pl| pl["Ip"] = address if pl["Ip"] == '-1'  }
 end
 
+def _get_rand
+  rand(6) + 1
+end
+
 module Reports
   def report_players pl
     [ 200, { "Content-Type" => 'application/javascript' },
@@ -26,7 +30,23 @@ module Reports
   def report_player_unknown
     report_error "Unknown player. Maybe you forget to Join me?"
   end
-  
+
+  def report_game_started
+    report_error "Game have already started. You are too late."
+  end
+
+  def report_not_started
+    report_error "Game has'not started yet"
+  end
+
+  def report_dices d1, d2
+    report_json( { 'ThrowDice' => { 'Dice1' => d1, 'Dice2' => d2 } } )
+  end
+
+  def report_wrong_dices
+    report_error "You dices differs from previous call. Maybe you are the cheater?"
+  end
+
   def report_error message
     [ 200, { "Content-Type" => 'application/javascript' },
       JSON.pretty_generate({

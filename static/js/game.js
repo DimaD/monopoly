@@ -34,7 +34,7 @@ function add_player(pl){
       p = pl.Possession[i];
       console.log(p);
       _properties[p.PropertyId]["owner"] = pl;
-      _properties[p.PropertyId]["factories"] = p.Factories;    
+      _properties[p.PropertyId]["factories"] = p.Factories || 0;    
     }
   }
 

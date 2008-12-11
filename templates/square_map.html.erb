@@ -12,10 +12,24 @@
     <% pos = get_position(size-i) %>
     <td class="<%= class_for_pos(pos) %>" id="position_<%= pos.Id %>"><%= name_for_pos(pos) %></td>
 
-
-    <% 0.upto(l-3) do |j| %>
-      <td>&nbsp;</td>
-    <% end %>
+    <td colspan="<%= l-2 %>">
+      <% if i == 0 %>
+        Ход:
+        <% if @core.game_started? %> 
+          <%= @core.turn_number %>
+        <% elsif @network.can_start? %>
+          <a href="begin_game">Начать игру</a>
+          <% if @network.players.empty? %> (одному не интересно, давайте кого-нить подождем?) <% end %>
+        <% else %>
+          Не все игроки готовы, надо подождать
+        <% end %>
+      <% end %>
+      <% if i == 0 and @network.my_move? and @core.game_started? %>
+        <% if !@network.thrown_dices? %><a href="throw">Бросить кубики</a><% end %>
+        <% if @network.can_buy? %><a href="buy">Купить карточку на текущей позиции</a><% end %>
+        <a href="finish_move">Закончить ход</a>
+      <% end %>
+    </td>
 
     <% pos = get_position(l+i) %>
     <td class="<%= class_for_pos(pos) %>" id="position_<%= pos.Id %>"><%= name_for_pos(pos) %></td>

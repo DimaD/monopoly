@@ -13,7 +13,7 @@ ThrowDice:
 ConfirmThrowDice:
     Dice1: int[1..6]
     Dice2: int[1..6]
-    PositionId: int
+    # PositionId: int
 TradeOffer:
     ID: int
     PlayerID: int

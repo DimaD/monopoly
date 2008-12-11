@@ -46,8 +46,43 @@ module Monopoly
       @state.not.nil?
     end
 
+    def make_move dice1, dice2
+      @state.make_move dice1, dice2
+    end
+    
     def start_game
       @state.start_game
+    end
+
+    def events
+      @state.events_stack
+    end
+
+    def my_move? lp
+      pl = @state.get_player_for_turn
+      !pl.nil? && (pl.game_id == lp.game_id )
+    end
+
+    def can_buy? lp
+      return false if !my_move?(lp)
+
+      pr = @state.property_at(lp.position_id)
+      return false if pr.nil?
+      return false if pr.IsJail or pr.IsEvent
+      return pr.owner.nil? && (lp.cash >= pr.Price)
+    end
+
+    def buy_card pl
+      raise MonopolyGameError, "нельзя купить эту карточку. Рассинхронизация?" if !can_buy?(pl)
+
+      pr = @state.property_at( pl.position_id )
+      pl.buy(pr)
+      @state.add_event "Игрок #{pl.name} купил карточку #{pr.Name}"
+    end
+
+    def finish_move pl
+      raise MonopolyGameError, "не твой ход" if !my_move?(pl)
+      @state.finish_move
     end
 
     def turn_number

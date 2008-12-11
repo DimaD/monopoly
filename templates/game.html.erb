@@ -13,22 +13,7 @@
 </div>
 
 <div class="span-6">
-  <p>Ход:
-    <% if @core.game_started? %> 
-      <%= @core.turn_number %>
-    <% elsif @network.can_start? %>
-      <a href="begin_game">Начать игру</a>
-      <% if @network.players.empty? %>
-      (одному не интересно, давайте кого-нить подождем?)
-      <% end %>
-      
-    <% else %>
-      Не все игроки готовы, надо подождать
-    <% end %>
-  </p>
   <p>Правила: <%= @core.rules_name %></p>
-</div>
-<div class="span-6">
   <h4>Локальный Игрок</h4>
   <strong><%= @player.game_id %> <%= @player.name %></strong> (<%= @player.cash %>/<%= @player.position_id %>)</p>
 </div>
@@ -40,6 +25,17 @@
   <% end %>
   </ol>
   
+</div>
+
+<div class="span-12 last">
+  <h4>События</h4>
+  <ul>
+    <% if !@network.game_events.blank? %>
+      <% for ev in @network.game_events %>
+        <li><%= ev %></li>
+      <% end %>
+    <% end %>
+  </ul>
 </div>
 
 <script>

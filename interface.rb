@@ -6,6 +6,7 @@ require 'camping'
 require 'cookie_sessions'
 require 'network'
 require 'mhelpers'
+require "delegate"
 
 begin
   require 'erubis'
@@ -109,7 +110,11 @@ module Interface::Controllers
   class Connect < R '/connect'
     def post
       if correct_input?
-        Interface::connect_to_server(@input[:address], @input[:name])
+        begin
+          Interface::connect_to_server(@input[:address], @input[:name])
+        rescue Exception => e
+          @state[:error] = e.message
+        end
       else
         @state[:error] = 'Введите адрес сервера и желаемое имя пользователя'
       end
@@ -145,6 +150,68 @@ module Interface::Controllers
       redirect Index
     end
   end
+
+  class Buy < R '/buy'
+    def get
+      if Interface::get_core.nil? || Interface::get_network.nil?
+        @state[:error] = 'Нельзя купить, если вы не инициализириовали игру'
+      elsif !Interface::get_core.game_started?
+        @state[:error] = 'Нельзя покупать, пока игра не началась'
+      elsif !Interface::get_network.my_move?
+        @state[:error] = 'Нельзя покупать, пока не пришел ваш ход'
+      elsif !Interface::get_network.can_buy?
+        @state[:error] = 'Нельзя купить эту карточку'
+      else
+        begin
+          Interface::get_network.buy_card
+        rescue Exception => e
+          @state[:error] = e.message
+        end
+      end
+
+      redirect Index
+    end
+  end
+
+  class FinishMove < R '/finish_move'
+    def get
+      if Interface::get_core.nil? || Interface::get_network.nil?
+        @state[:error] = 'Нельзя закончить ход, если вы не инициализириовали игру'
+      elsif !Interface::get_core.game_started?
+        @state[:error] = 'Нельзя закончить ход, пока игра не началась'
+      elsif !Interface::get_network.my_move?
+        @state[:error] = 'Нельзя закончить ход, пока не пришел ваш ход'
+      else
+        # begin
+          Interface::get_network.finish_my_move
+        # rescue Exception => e
+        #     @state[:error] = e.message
+        # end
+      end
+
+      redirect Index
+    end
+  end
+
+  class Throw < R '/throw'
+    def get
+      if Interface::get_core.nil? || Interface::get_network.nil?
+        @state[:error] = 'Нельзя кидать кубики, если вы не инициализириовали игру'
+      elsif !Interface::get_core.game_started?
+        @state[:error] = 'Нельзя кидать кубики, пока игра не началась'
+      elsif !Interface::get_network.my_move?
+        @state[:error] = 'Нельзя кидать кубики, пока не пришел ваш ход'
+      else
+        # begin
+          Interface::get_network.make_move
+        # rescue Exception => e
+        #     @state[:error] = e.message
+        # end
+      end
+      redirect Index
+    end
+  end
+
 end
 
 

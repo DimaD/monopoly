@@ -4,11 +4,13 @@ require 'active_support'
 require 'exceptions'
 require 'rules'
 require 'player'
-require 'ostruct'
+require 'property'
+
+ADD_CIRCLE_MONEY = 2000
 
 module Monopoly
   class GameState
-    attr_accessor :rules, :state
+    attr_accessor :rules, :state, :events_stack
     
     #used to transparently map our config CamelNotation to Ruby underscore_notation
     # def method_missing(symbol, *a)
@@ -82,18 +84,23 @@ module Monopoly
         if !po.IsJail && !po.IsEvent && po.PropertyId != -1
           property = props.find { |pr| pr["Id"] == po.PropertyId }
           raise RulesError, "No property with id #{pos.PropertyId}" if property.nil?
-          po.property = OpenStruct.new(property)
+          po.property = Property.new(property)
         end
         @positions[po.Id] = po
       end
-
+      @board_length = @positions.size
       @players ||= {}
+      @events_stack ||= []
     end
 
     def start_game
       if !game_started?
         @state["Turn"] = 1;
       end
+    end
+
+    def finish_move
+      @state["Turn"] += 1;
     end
 
     def new_player name
@@ -111,7 +118,7 @@ module Monopoly
       pl = get_player id
       if pl.nil?
         cash ||= @rules.starting_money
-        pl = Player.new( name, id, cash, position, ready, posession)
+        pl = Player.new( name, id, cash, position, ready, posession )
         @players_count = [id, players_count].max
         set_player pl
       end
@@ -130,6 +137,60 @@ module Monopoly
         e = pl["Player"]
         get_player_or_new e["Id"], e["Name"], false, e["Cash"], e["PositionId"], e["Possession"]
       }
+    end
+
+    def make_move dice1, dice2
+      raise MonopolyGameError, "Dices value more then 12" if dice1 + dice2 > 12
+  
+      pl = get_player_for_turn
+      new_pos = (pl.position_id + dice1 + dice2) % @board_length
+      move_pl_to pl, new_pos
+
+      pos = @positions[new_pos]
+      if pos.IsEvent
+        event = get_event_card dice1, dice2
+        add_event "Игрок #{pl.name} попал на поле событие и ему выпала карточка: «#{event['Text']}». Игрок перемещается на #{event['Movement']}, его баланс меняется на #{event['Amount']}"
+        new_pos += event['Movement'] % @board_length
+        move_pl_to pl, new_pos
+        pl.cash += event['Amount']
+      elsif pos.IsJail
+        # pl.place_to_jail()
+      elsif pos.property and pos.property.owner and pos.property.owner != pl.game_id
+        own = @players[pos.property.owner]
+        own.cash += pos.property.kickback
+        pl.cash  -= pos.property.kickback
+        add_event "Игрок #{pl.name} заплатил игроку #{own.name} #{pos.property.kickback} у.е. за прохож по клетке «#{pos.property.Name}»"
+      end
+      add_event "Игрок #{pl.name} перешел на поле #{pl.position_id} после броска кубиков [#{dice1}, #{dice2}]"
+    end
+
+    def move_pl_to pl, pos
+      if pos < pl.position_id or pos == 0
+        add_event "Игрок #{pl.name} прошел через начало площадки и получил #{ADD_CIRCLE_MONEY} у.е. денег"
+        pl.cash += ADD_CIRCLE_MONEY
+      end
+      pl.position_id = pos
+    end
+
+    def get_player_for_turn
+      n = ( turn_number - 1) % @players.size 
+      @players[n + 1]
+    end
+
+    def get_event_card d1, d2
+      l = @rules.events.size
+      i = (d1 + d2) % l
+      return @rules.events[i]
+    end
+
+    def property_at id
+      pos = @positions[id]
+      p id, pos
+      !pos.nil? && !pos.property.nil? ? pos.property : nil
+    end
+
+    def add_event m
+      @events_stack.unshift(m)
     end
 
     def rules_name
