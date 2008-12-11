@@ -66,8 +66,9 @@ module Monopoly
       @players_count ||= 0
 
       @state ||= Hash.new
-      @state["Turn"] ||= -1;
-      @state["Rules"] ||= @rules.name;
+      @state["Turn"]   ||= -1;
+      @state["Rules"]  ||= @rules.name;
+      @state["Groups"] ||= []
 
       if @state["Players"]
         translate_to_objects @state["Players"]
@@ -78,16 +79,27 @@ module Monopoly
       positions = @rules.board["Positions"]
       props = @rules.properties
 
+      @groups = {}
+      @state["Groups"].each do |gr|
+        g = OpenStruct.new(gr)
+        @groups[g.Id] = g
+      end
+
       @positions = {}
+      @properties_by_group = Hash.new { |h, k| h[k] = [] }
+
       positions.each do |pos|
         po = OpenStruct.new(pos)
         if !po.IsJail && !po.IsEvent && po.PropertyId != -1
           property = props.find { |pr| pr["Id"] == po.PropertyId }
           raise RulesError, "No property with id #{pos.PropertyId}" if property.nil?
           po.property = Property.new(property)
+          po.property.factory_price = @groups[po.property.GroupId]
+          @properties_by_group[po.property.GroupId] << po.property
         end
         @positions[po.Id] = po
       end
+
       @board_length = @positions.size
       @players ||= {}
       @events_stack ||= []
@@ -118,11 +130,25 @@ module Monopoly
       pl = get_player id
       if pl.nil?
         cash ||= @rules.starting_money
-        pl = Player.new( name, id, cash, position, ready, posession )
+        pl = Player.new( name, id, cash, position, ready )
         @players_count = [id, players_count].max
+        if posession
+          posession.each do |pos|
+            pr = @properties[pos["PropertyId"]]
+            raise MonopolyGameError, "no property #{po['PropertyId']} for player #{pl.Name}" if pl.nil?
+            player.add_posession( pr, pos["Factories"], pos["Deposit"] )
+          end
+        end
         set_player pl
       end
       pl
+    end
+
+    def kill_player pl
+      add_event "Игрок #{pl.Name} обанкротился и вышел из игры"
+      pl.kill
+      @state["Players"].reject! { |player| player.game_id == pl.game_id }
+      @players.delete( pl.game_id )
     end
 
     def set_player player
@@ -144,37 +170,45 @@ module Monopoly
   
       pl = get_player_for_turn
       new_pos = (pl.position_id + dice1 + dice2) % @board_length
-      move_pl_to pl, new_pos
+      move_pl_to pl, new_pos, dice1, dice2
 
-      pos = @positions[new_pos]
+      add_event "Игрок #{pl.name} перешел на поле #{pl.position_id} после броска кубиков [#{dice1}, #{dice2}]"
+    end
+
+    def check_events pl, dice1, dice2
+      pos = @positions[pl.position_id]
       if pos.IsEvent
         event = get_event_card dice1, dice2
         add_event "Игрок #{pl.name} попал на поле событие и ему выпала карточка: «#{event['Text']}». Игрок перемещается на #{event['Movement']}, его баланс меняется на #{event['Amount']}"
-        new_pos += event['Movement'] % @board_length
-        move_pl_to pl, new_pos
+        new_pos = (pl.position_id + event['Movement']) % @board_length
+        move_pl_to pl, new_pos, dice1, dice2
         pl.cash += event['Amount']
       elsif pos.IsJail
         # pl.place_to_jail()
       elsif pos.property and pos.property.owner and pos.property.owner != pl.game_id
         own = @players[pos.property.owner]
-        own.cash += pos.property.kickback
-        pl.cash  -= pos.property.kickback
-        add_event "Игрок #{pl.name} заплатил игроку #{own.name} #{pos.property.kickback} у.е. за прохож по клетке «#{pos.property.Name}»"
+        pr = own.get_property(pos.property.PropertyId)
+        if (pr && !pr.deposit)
+          own.cash += pos.property.kickback
+          pl.cash  -= pos.property.kickback
+          add_event "Игрок #{pl.name} заплатил игроку #{own.name} #{pos.property.kickback} у.е. за проход по клетке «#{pos.property.Name}»"
+        end
       end
-      add_event "Игрок #{pl.name} перешел на поле #{pl.position_id} после броска кубиков [#{dice1}, #{dice2}]"
     end
 
-    def move_pl_to pl, pos
+    def move_pl_to pl, pos, dice1, dice2
       if pos < pl.position_id or pos == 0
         add_event "Игрок #{pl.name} прошел через начало площадки и получил #{ADD_CIRCLE_MONEY} у.е. денег"
         pl.cash += ADD_CIRCLE_MONEY
       end
       pl.position_id = pos
+      check_events pl, dice1, dice2
     end
 
     def get_player_for_turn
-      n = ( turn_number - 1) % @players.size 
-      @players[n + 1]
+      pl = @players.values.sort { |x, y| x.game_id <=> x.game_id }
+      n = ( turn_number - 1) % pl.size 
+      pl[n]
     end
 
     def get_event_card d1, d2
@@ -185,7 +219,6 @@ module Monopoly
 
     def property_at id
       pos = @positions[id]
-      p id, pos
       !pos.nil? && !pos.property.nil? ? pos.property : nil
     end
 

@@ -2,11 +2,11 @@ require 'game_state'
 require 'exceptions'
 require 'httplib'
 require 'yaml'
-require 'json'
 require 'core'
 require 'net/http'
 require 'utils'
 require 'thread'
+require 'json/add/core'
 
 DEFAULT_PORT = 80
 
@@ -62,6 +62,9 @@ module Monopoly
         if method_name == 'confirm_throw_dice'
           Thread.new(self) { |a| a.lock.synchronize { a.try_to_move } }
         end
+        pl = get_player_for_request request
+        @players.delete("#{request.address}:#{request.port}") if pl.bankrupt?
+
         return r
       # rescue Exception => e
       #   return error500(e.message)
@@ -165,7 +168,8 @@ module Monopoly
     end
 
     def finish_move req
-      @core.finish_move( get_player_for_request(req) )
+      pl = get_player_for_request(req)
+      @core.finish_move( pl )
       @my_dices = nil
       ok
     end

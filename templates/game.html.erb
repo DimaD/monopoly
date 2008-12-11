@@ -15,13 +15,33 @@
 <div class="span-6">
   <p>Правила: <%= @core.rules_name %></p>
   <h4>Локальный Игрок</h4>
-  <strong><%= @player.game_id %> <%= @player.name %></strong> (<%= @player.cash %>/<%= @player.position_id %>)</p>
+  <p class="player_info" id="player_info_<%= @player.game_id %>"><strong><%= @player.game_id %> <%= @player.name %></strong> (<%= @player.cash %>/<%= @player.position_id %>)</p>
+  <% if !@player.posession.empty? %>
+    <h5>Владения</h5>
+    <ul>
+    <% for pos in @player.posession %>
+      <li class="<%= class_for_prop pos %>"><%= pos.Name %>. магазинов: <%= pos.factories %>, цена прохода: <%= pos.kickback %></li>
+    <% end %>
+    </ul>  
+  <% end %>
+  
+  <h4>Владения</h4>
+  
 </div>
 <div class="span-6">
   <h4>Сетевые Игроки</h4>
   <ol>
   <% @network.players.each_pair do |k, v| %>
-    <li><%= v %> (<%= v.cash %>/<%= v.position_id %>) <% if v.ready %>готов<% else %>не готов<% end %></li>
+    <li class="player_info" id="player_info_<%= v.game_id %>"><%= v %> (<%= v.cash %>/<%= v.position_id %>) <% if v.ready %>готов<% else %>не готов<% end %>
+      <% if !v.posession.empty? %>
+        <h5>Владения</h5>
+        <ul>
+        <% for pos in v.posession %>
+          <li class="<%= class_for_prop pos %>"><%= pos.Name %>. магазинов: <%= pos.factories %>, цена прохода: <%= pos.kickback %></li>
+        <% end %>
+        </ul>
+      <% end %>  
+    </li>
   <% end %>
   </ol>
   
@@ -46,7 +66,7 @@
 
   var _players_to_load = [ <%= @player.to_js %>, <%= @network.players.map { |pl| pl[1].to_js }.join(',') %>];
   load_players(_players_to_load);
-
+  show_players_icons();
   $(".player").tooltip({
     bodyHandler: player_tooltip,
     showURL: false

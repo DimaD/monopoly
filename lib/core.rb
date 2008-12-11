@@ -82,7 +82,14 @@ module Monopoly
 
     def finish_move pl
       raise MonopolyGameError, "не твой ход" if !my_move?(pl)
+      if pl.bankrupt?
+        @state.kill_player pl
+      end
       @state.finish_move
+    end
+
+    def finish_game
+      @finished = true
     end
 
     def turn_number

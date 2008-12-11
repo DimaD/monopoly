@@ -23,6 +23,14 @@ function load_players(players){
   }
 }
 
+function show_players_icons(){
+  $('.player_info').each(function(){
+    var id = parseInt(this.id.replace('player_info_', ''))
+    var pl = _players_i[id]
+    $(this).prepend( $("<img />").attr({ src: '/static/img/' + players_icons[ (pl.Id-1) % 10 ]}) )
+  });
+}
+
 function add_player(pl){
   // if (_players_i[pl.Id])
   //   return;

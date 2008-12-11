@@ -27,4 +27,8 @@ module MHelpers
       position.property.Name
     end
   end
+
+  def class_for_prop prop
+    "group_#{prop.GroupId}"
+  end
 end

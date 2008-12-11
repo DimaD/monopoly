@@ -9,7 +9,7 @@ end
 module Reports
   def report_players pl
     [ 200, { "Content-Type" => 'application/javascript' },
-      JSON.pretty_generate( { "GetPlayers" => pl} )
+      { "GetPlayers" => pl}.to_json
     ]
   end
 
@@ -19,7 +19,7 @@ module Reports
 
   def report_join id, rules, state
     [ 200, { "Content-Type" => 'application/javascript' },
-      JSON.pretty_generate( { "Join" => { "Id" => id,"Rules" => rules, "State" => state} } )
+      { "Join" => { "Id" => id,"Rules" => rules, "State" => state} }.to_json
     ]
   end
 
@@ -49,16 +49,17 @@ module Reports
 
   def report_error message
     [ 200, { "Content-Type" => 'application/javascript' },
-      JSON.pretty_generate({
+      {
         'Error' => {
           'Code'  => 200,
           'Message' => message
-    }})]
+    }}.to_json]
     
   end
 
   def report_json obj
-    [ 200, { "Content-Type" => 'application/javascript' }, JSON.pretty_generate(obj) ]
+    p obj
+    [ 200, { "Content-Type" => 'application/javascript' }, obj.to_json ]
   end
 
   def ok
