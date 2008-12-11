@@ -24,9 +24,20 @@ module Monopoly
       @posession.find { |p| p.game_id == id }
     end
 
+    def property_at pid
+      @posession.find { |p| p.position_id == pid }
+    end
+
     def buy pr
       @cash -= pr.Price
       add_posession pr
+    end
+
+    def sell prop
+      property = get_property(prop.Id)
+      raise MonopolyGameError, "Don't own property #{prop.Id} #{prop.Name}" if property.nil?
+
+      remove_posession prop
     end
 
     def add_posession pr, fact=0, deposit=false

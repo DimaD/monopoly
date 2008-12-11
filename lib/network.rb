@@ -64,7 +64,7 @@ module Monopoly
           Thread.new(self) { |a| a.lock.synchronize { a.try_to_move } }
         end
         pl = get_player_for_request request
-        @players.delete("#{request.address}:#{request.port}") if pl.bankrupt?
+        @players.delete("#{request.address}:#{request.port}") if !p.nil? and pl.bankrupt?
 
         return r
       # rescue Exception => e
@@ -216,6 +216,18 @@ module Monopoly
           return report_wrong_dices
         end
       end
+      ok
+    end
+
+    def sell req
+      return report_not_started if !@core.game_started?
+
+      pos = Integer(req.param('Position'))
+      pl = get_player_for_request req
+      return report_player_unknown if pl.nil?
+
+      @core.sell(pl, pos)
+
       ok
     end
 

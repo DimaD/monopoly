@@ -88,6 +88,13 @@ module Monopoly
       @state.finish_move
     end
 
+    def sell pl, pid
+      prop = pl.property_at( pid )
+      pl.sell( prop )
+      pl.cash += prop.Price
+      add_event "Игрок #{pl.name} продал карточку #{prop.Name} банку"
+    end
+
     def finish_game
       @finished = true
     end

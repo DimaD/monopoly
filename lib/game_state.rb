@@ -95,6 +95,7 @@ module Monopoly
           raise RulesError, "No property with id #{pos.PropertyId}" if property.nil?
           po.property = Property.new(property)
           po.property.factory_price = @groups[po.property.GroupId]
+          po.property.position_id = po.Id
           @properties_by_group[po.property.GroupId] << po.property
         end
         @positions[po.Id] = po
