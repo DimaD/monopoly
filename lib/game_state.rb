@@ -140,6 +140,8 @@ module Monopoly
           end
         end
         set_player pl
+      else
+        pl.ready = ready
       end
       pl
     end

@@ -50,6 +50,6 @@ if __FILE__ == $0
     end
   end
   puts "Starting bot on port #{options[:port]}..."
-  p get_network.players
+  get_network
   config.run.join()
 end

@@ -19,12 +19,14 @@ require 'core'
 
 options = {
   :port => 8080,
+  :host => "localhost",
 }
 
 OptionParser.new("Dmitiry Dzema monopoly client.") do |opts|
   opts.on("-p", "--port PORT", "Port to bind") do |p|
     options[:port] = Integer(p)
   end
+  opts.on("-a", "--host HOST", "Host ot bind to") { |p| options[:host] = p }
   opts.on("-d", "--default", "Start with default params") do |p|
     options[:default] = p
   end
@@ -102,6 +104,7 @@ module Interface::Controllers
         @network = Interface::get_network
         @player  = Interface::get_player
         @field_map = Interface::get_field_map
+        p @network.players
         render :game
       end
     end
@@ -219,7 +222,7 @@ require 'mongrel'
 require 'mongrel/camping'
 require 'monopoly_handler'
 if __FILE__ == $0
-  config = Mongrel::Configurator.new :host => "localhost" do
+  config = Mongrel::Configurator.new :host => options[:host] do
     listener :port => options[:port] do
       debug "/", what = [:access]
       debug "/interface/", what = [:access]
@@ -229,7 +232,7 @@ if __FILE__ == $0
       uri "/", :handler => Mongrel::MonopolyHandler.new() { Interface::get_network }
     end
   end
-  puts "Starting server on port #{options[:port]}..."
+  puts "Starting server on #{options[:host]}:#{options[:port]}..."
   if options[:default]
     Interface::set_core( Monopoly::Core.new( :rules => 'buxter' ) )
     Interface::set_player Interface::get_network.new_local_player('Default Player')

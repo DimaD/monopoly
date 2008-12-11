@@ -27,13 +27,14 @@ module Monopoly
       @turns_dices = {}
       @player_dices = Hash.new { |hash, key| hash[key] = Hash.new() }
       @lock = Mutex.new
+      @moved = {}
     end
 
     def self.connect_to_server address, name, local_port
       req = Request.new(local_port)
       js = req.join( "http://#{address}", name )
       core = Monopoly::Core.new( :json => js["Join"]["Rules"], :state => js["Join"]["State"] )
-      n = Network.new(core, local_port)
+      n = self.new(core, local_port)
       n.local_player = core.get_player( Integer(js["Join"]["Id"]) );
 
       players = req.get_players( "http://#{address}" )
@@ -112,14 +113,16 @@ module Monopoly
       turn = @core.turn_number
       return if my_move?
 
-      if @player_dices[turn].size == @players.size
+      if @player_dices[turn].size == @players.size and @moved[turn].nil?
+        @moved[turn] = 1
         dices = @player_dices[turn].values()
         mydices = _get_dices
-        @requester.send_all( @players.keys, :confirm_throw_dice, mydices[0], mydices[1] )
 
-        d1 = calc_dice( dices.map { |d| d[0] }.push(mydices[0]) )
-        d2 = calc_dice( dices.map { |d| d[1] }.push(mydices[1]) )
-
+        d1 = calc_dice( dices.map { |d| d[0] }.push( mydices[0] ) )
+        d2 = calc_dice( dices.map { |d| d[1] }.push( mydices[1] ) )
+        
+        p dices.map { |d| d[0] }.push( mydices[0] )
+        p dices.map { |d| d[1] }.push( mydices[1] )
         @core.make_move( d1, d2 )
       end
     end
@@ -128,12 +131,15 @@ module Monopoly
       raise MonopolyError, "уже кидал кубики на этом ходу" if !@my_dices.nil?
 
       dices = @requester.send_all( @players.keys, :throw_dice )
+      p dices
       my_dices = _get_dices
       @requester.send_all( @players.keys, :confirm_throw_dice, my_dices[0], my_dices[1] )
 
       d1 = calc_dice( dices.map { |d| d["ThrowDice"]["Dice1"] }.flatten.push(my_dices[0]) )
       d2 = calc_dice( dices.map { |d| d["ThrowDice"]["Dice2"] }.flatten.push(my_dices[1]) )
 
+      p dices.map { |d| d["ThrowDice"]["Dice1"] }.flatten.push(my_dices[0])
+      p dices.map { |d| d["ThrowDice"]["Dice2"] }.flatten.push(my_dices[1])
       @core.make_move( d1, d2 )
     end
 
@@ -182,20 +188,20 @@ module Monopoly
       turn = @core.turn_number
       if @turns_dices[turn].nil?
         @turns_dices[turn] = @my_dices = [ _get_rand, _get_rand ]
+        @requester.send_all( @players.keys, :confirm_throw_dice, @my_dices[0], @my_dices[1] )
       end
       @turns_dices[turn]
     end
 
     def throw_dice req
       return report_not_started if !@core.game_started?
-
       dices = _get_dices
       report_dices dices[0], dices[1]
     end
 
     def confirm_throw_dice req
       return report_not_started if !@core.game_started?
-
+      p 'confirm_throw_dice'
       turn = @core.turn_number
 
       pl = get_player_for_request req
@@ -206,7 +212,7 @@ module Monopoly
         @player_dices[turn][pl] = [ Integer(req.param('Dice1')), Integer(req.param('Dice2')) ]
       else
         d1, d2 = Integer(req.param('Dice1')), Integer(req.param('Dice2'))
-        if d1 != dices[0] and d2 != dices[1]
+        if !d1.nil? and !d2.nil? and d1 != dices[0] and d2 != dices[1]
           return report_wrong_dices
         end
       end
@@ -272,6 +278,7 @@ module Monopoly
           if !pl.send_join
             @requester.join( e['Ip'], @local_player.name )
             @requester.notify_ready( e['Ip'] ) if !pl.send_join
+            pl.send_join = true
           end
         end
       end
@@ -362,7 +369,7 @@ module Monopoly
 
       addr = "http://" + addr.sub(/^http:\/\//, '').sub(/^::1/, 'localhost')
 
-      uri = URI.parse( "#{addr}/#{url}?#{encode_params(params)}" )
+      uri = URI.parse( "#{addr}/#{url}?#{params.to_query}" )
       res = Net::HTTP.get_response( uri )
       raise RequestError if res.nil?
 
@@ -377,13 +384,12 @@ module Monopoly
       js.has_key?("Error")
     end
 
-    def encode_params prs
-      s = prs.inject("") do |mem, kv|
-        key, value = kv
-        encoded = value.to_s.gsub(' ', '%20')
-        mem += "#{key}=#{encoded}&"
-      end
-      s.gsub( /(&)$/, '' )
-    end
+    # def encode_params prs
+    #   s = prs.inject("") do |mem, kv|
+    #     key, value = kv
+    #     mem += value.to_query(key)
+    #   end
+    #   s.gsub( /(&)$/, '' )
+    # end
   end
 end
