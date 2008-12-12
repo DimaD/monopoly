@@ -257,7 +257,8 @@ module Interface::Controllers
   class UpdatesChecker < R '/is_updated'
     def get
       return false if @input[:since].nil?
-      @network.last_updated > Integer(@input[:since])
+      network = Interface.get_network
+      !network.nil? && network.last_modified > Integer(@input[:since])
     end
   end
 

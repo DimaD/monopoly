@@ -126,6 +126,7 @@ module Monopoly
         p dices.map { |d| d[0] }.push( mydices[0] )
         p dices.map { |d| d[1] }.push( mydices[1] )
         @core.make_move( d1, d2 )
+        mark_updated
       end
     end
 
@@ -160,6 +161,7 @@ module Monopoly
     def buy_card
       @core.buy_card(@local_player)
       @requester.send_all( @players.keys, :buy )
+      mark_updated
     end
 
     def finish_my_move
@@ -194,6 +196,7 @@ module Monopoly
 
     def buy req
       @core.buy_card( get_player_for_request(req) )
+      mark_updated
       ok
     end
 
@@ -210,11 +213,13 @@ module Monopoly
     def deposit_card id
       @core.deposit(@local_player, id)
       @requester.send_all( @players.keys, :deposit, id )
+      mark_updated
     end
 
     def redeem_card id
       @core.redeem(@local_player, id)
       @requester.send_all( @players.keys, :redeem, id )
+      mark_updated
     end
 
     def deposit req
@@ -222,6 +227,7 @@ module Monopoly
       return report_player_unknown if pl.nil?
 
       @core.deposit( pl, Integer(req.param('Position')) )
+      mark_updated
       return ok
     end
 
@@ -230,6 +236,7 @@ module Monopoly
       return report_player_unknown if pl.nil?
 
       @core.redeem( pl, Integer(req.param('Position')) )
+      mark_updated
       return ok
     end
 
@@ -246,18 +253,19 @@ module Monopoly
         parsed[e]['PropertyIDs'] ||= []
         parsed[e]['Cash'] ||= 0
       end
-      p parsed
       parsed
     end
 
     def make_accept_offer offer_id
       @core.accept_offer(@local_player, offer_id)
       @requester.send_all( @players.keys, :accept_offer, offer_id )
+      mark_updated
     end
 
     def make_reject_offer offer_id
       @core.reject_offer(@local_player, offer_id)
       @requester.send_all( @players.keys, :reject_offer, offer_id )
+      mark_updated
     end
 
     def assert_offer req
@@ -266,6 +274,7 @@ module Monopoly
       return report_player_unknown if pl.nil?
 
       @core.accept_offer(pl, id)
+      mark_updated
       ok
     end
 
@@ -275,6 +284,7 @@ module Monopoly
       return report_player_unknown if pl.nil?
 
       @core.reject_offer(pl, id)
+      mark_updated
       ok
     end
 
@@ -282,6 +292,7 @@ module Monopoly
       pl = get_player_for_request(req)
       @core.finish_move( pl )
       @my_dices = nil
+      mark_updated
       ok
     end
 

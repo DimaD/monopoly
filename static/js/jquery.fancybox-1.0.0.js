@@ -27,6 +27,7 @@
 	};
 
 	$.fn.fancybox.start = function(el, o) {
+		$(document).trigger('fancybox.start');
 		if (opts.animating) return false;
 
 		if (o.overlayShow) {
@@ -285,6 +286,7 @@
 			$("#fancy_content").hide().empty();
 			$("#fancy_overlay,#fancy_bigIframe").fadeOut("fast").remove();
 		}
+		$(document).trigger('fancybox.close');
 	};
 
 	$.fn.fancybox.showLoading = function() {

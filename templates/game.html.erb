@@ -98,4 +98,7 @@
     var _trade_offers = <%= @network.mine_trade_offers.to_json %>;
     load_trade_offers(_trade_offers);
   <% end %>
+  <% if @network.last_modified %>
+    load_last_modified('<%= @network.last_modified %>');
+  <% end %>
 </script>

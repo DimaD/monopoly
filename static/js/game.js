@@ -120,7 +120,6 @@ function visiting_price(prop) {
 function load_trade_offers(offers){
   set_reload_lock();
   jQuery.facebox(gen_offers_html(offers));
-  $(document).bind('close.facebox', free_reload_lock)
 }
 
 function gen_offers_html(offers) {
@@ -158,22 +157,50 @@ function gen_names_for_properties(ids){
 }
 
 function set_reload_lock(){
+  console.log('set')
   _mega_lock = true;
 }
 
 function free_reload_lock(){
+  console.log('unset')
   _mega_lock = false;
 }
 
+function try_to_reload(){
+  if (!_mega_lock)
+    location.reload(true);
+}
+
+function check_modified(last){
+  $.get('is_updated', { 'since': last }, function(data){
+    if (data == 'true')
+      try_to_reload();
+    setTimeout(function(){ check_modified(last); }, 2000);
+  });
+}
+
+function load_last_modified(last){
+  _mega_lock = false;
+  $(document).bind('init.facebox', set_reload_lock );
+  $(document).bind('close.facebox', free_reload_lock);
+  
+  $(function(){
+    setTimeout(function(){ check_modified(last); }, 2000);
+  });
+}
 
 $(function(){
+  $(document).bind('fancybox.close', free_reload_lock);
+  $(document).bind('fancybox.start', set_reload_lock);
   $('.offers').each(function(){
     var id = parseInt( this.id.replace('offer_', '') )
     $(this).show();
     $(this).fancybox({
       'frameWidth' : 610,
       'overlayShow': true,
-      'itemLoadCallback': function(opts){ opts.itemArray.push( { 'url': 'offerwith/' + id, title: "Предложить сделку" }) }
+      'itemLoadCallback': function(opts){ 
+        opts.itemArray.push( { 'url': 'offerwith/' + id, title: "Предложить сделку" });
+      }
     });
   });
 
