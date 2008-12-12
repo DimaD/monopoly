@@ -2,17 +2,14 @@
 $: << "./lib"
 require 'optparse'
 require 'rubygems'
-require 'mongrel'
-require 'monopoly_handler'
 
-require 'cookie_sessions'
 require 'greedy_network'
 require 'mhelpers'
 require "delegate"
-require 'core'
 
 options = {
   :port => 9999,
+  :address => 'localhost',
   :host => 'localhost:8080',
   :name => 'Greedy Bot'
 }
@@ -25,8 +22,12 @@ OptionParser.new("Dmitiry Dzema monopoly greedy robot client.") do |opts|
     options[:host] = p
   end
   opts.on("-n", "--name NAME", "Bot name") do |p|
-    options[:name] = name
+    options[:name] = p
   end
+  opts.on("-a", "--address ADDRESS", "BOT ip to bind to") do |p|
+    options[:address] = p
+  end
+  
 end.parse!
 
 $options = options
@@ -42,7 +43,10 @@ def connect_to_server
 end
 
 if __FILE__ == $0
-  config = Mongrel::Configurator.new :host => "localhost" do
+  require 'mongrel'
+  require 'monopoly_handler'
+  
+  config = Mongrel::Configurator.new :host => options[:address] do
     listener :port => options[:port] do
       debug "/", what = [:access]
       uri "/static", :handler => Mongrel::DirHandler.new("static")

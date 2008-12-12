@@ -1,5 +1,4 @@
 require 'network'
-require 'json/add/core'
 
 class GreedyNetwork < Monopoly::Network
   def process request

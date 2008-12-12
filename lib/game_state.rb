@@ -191,7 +191,7 @@ module Monopoly
         # pl.place_to_jail()
       elsif pos.property and pos.property.owner and pos.property.owner != pl.game_id
         own = @players[pos.property.owner]
-        pr = own.get_property(pos.property.PropertyId)
+        pr = own.get_property(pos.property.Id)
         if (pr && !pr.deposit)
           own.cash += pos.property.kickback
           pl.cash  -= pos.property.kickback

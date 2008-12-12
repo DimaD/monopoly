@@ -128,7 +128,7 @@ module Monopoly
     end
 
     def make_move
-      raise MonopolyError, "уже кидал кубики на этом ходу" if !@my_dices.nil?
+      raise MonopolyGameError, "уже кидал кубики на этом ходу" if !@my_dices.nil?
 
       dices = @requester.send_all( @players.keys, :throw_dice )
       p dices
