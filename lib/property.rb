@@ -9,7 +9,11 @@ class Property < OpenStruct
   end
 
   def factories
-      super || 0
+    super || 0
+  end
+
+  def can_sell?
+    factories == 0
   end
 
   def deposit

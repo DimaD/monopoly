@@ -17,8 +17,8 @@ ConfirmThrowDice:
 TradeOffer:
     ID: int
     PlayerID: int
-    Give: { Cash: int, PropertyIDs: array[int] }
-    Wants: { Cash: int, PropertyIDs: array[int] }
+    Give: string
+    Wants: string
 AssertOffer:
     ID: int
 RejectOffer:

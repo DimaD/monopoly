@@ -50,6 +50,10 @@ module Interface
     return content
   end
 
+  def check_started
+    !Interface::get_core.nil? && !Interface::get_network.nil? && Interface::get_core.game_started?
+  end
+
   def self.get_core
     $core || nil
   end
@@ -227,6 +231,93 @@ module Interface::Controllers
         Interface::get_network.sell_card( Integer( @input[:id] ) )
       end
       redirect Index
+    end
+  end
+
+  class Deposit < R '/deposit/(\d+)'
+    def get id
+      position_id = Integer(id)
+      if check_started
+        Interface::get_network.deposit_card(position_id)
+      end
+      redirect Index
+    end
+  end
+
+  class Redeem < R '/redeem/(\d+)'
+    def get id
+      position_id = Integer(id)
+      if check_started
+        Interface::get_network.redeem_card(position_id)
+      end
+      redirect Index
+    end
+  end
+
+  class UpdatesChecker < R '/is_updated'
+    def get
+      return false if @input[:since].nil?
+      @network.last_updated > Integer(@input[:since])
+    end
+  end
+
+  class Offer < R '/offer/(\d+)'
+    def post id
+      if check_started
+        offer_id = Integer(id)
+        if @input['sOk']
+          Interface.get_network.make_accept_offer(offer_id)
+        elsif @input['sCancel']
+          Interface.get_network.make_reject_offer(offer_id)
+        end
+      end
+      redirect Index
+    end
+  end
+
+  class ShowOffer < R '/offerwith/(\d+)'
+    def get id
+      if !check_started
+        @error = 'Игра не началсь!'
+      else
+        @network = Interface::get_network
+        @player  = Interface::get_core.get_player( Integer(id) )
+        @local_player  = Interface::get_player
+      end
+      render 'offerwith', false
+    end
+
+    def post id
+      if empty_input_data?
+        @state[:error] = "Надо же хоть что-то в сделке указать"
+        redirect ShowOffer
+      else
+        my_money = get_money :my_money
+        my_offer = get_offer :my_offer
+
+        foreign_money = get_money :foreign_money
+        foreign_offer = get_offer :foreign_offer
+        
+        Interface::get_network.make_trade_offer( Integer(id), my_money, my_offer, foreign_money, foreign_offer )
+        render 'offersent', false
+      end
+    end
+
+    def empty_input_data?
+      [
+        :my_money, :foreign_money, :foreign_offer, :my_offer
+      ].map { |e| @input[e].nil? }.inject(false) { |memo, m| memo || m }
+      return false
+    end
+
+    def get_money t
+      m = @input[t]
+      m = (m.nil? || (m.length == 0)) ? 0 : m
+      Integer( m )
+    end
+
+    def get_offer t
+      @input[t].to_a.map { |e| Integer(e) }
     end
   end
 end

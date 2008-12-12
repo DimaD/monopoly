@@ -39,8 +39,8 @@ module Monopoly
       @rules
     end
 
-    def to_json
-      JSON.pretty_generate({"Rules" => @rules})
+    def to_json(*a)
+      { "Rules" => @rules }.to_json(*a)
     end
     
     def check

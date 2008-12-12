@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <title>Monopoly</title>
+    <link rel="stylesheet" href="/static/css/offer.css" type="text/css" media="screen" title="no title" charset="utf-8"/>
+    
+  </head>
+  <body>
+    <% if @error || @player.nil? %>
+      <%= @error || "Нет такого игрока" %>
+    <% else %>
+    <div class="wrapper">
+      <form method="POST">
+        <h3>Сделка с игроком <%= @player.name %></h3>
+        <div id="my" class="column">
+          <h4>Мое</h4>
+          <% if !@local_player.posession.blank? %>
+            <ul>
+            <% for pos in @local_player.posession %>
+              <li><label><input type="checkbox" name="my_offer" value="<%= pos.Id %>"></input> <%= pos.Name %></label></li>
+            <% end %>
+            </ul>
+          <% end %>
+          <label for="my_money">Деньги</label><input type="text" name="my_money" value="" id="my_money"/>
+        </div>
+        <div id="foreign" class="column">
+          <h4><%= @player.name %></h4>
+          <% if !@player.posession.blank? %>
+            <ul>
+            <% for pos in @player.posession %>
+              <li><label><input type="checkbox" name="foreign_offer" value="<%= pos.Id %>"></input><%= pos.Name %></label></li>
+            <% end %>
+            </ul>
+          <% end %>
+          <label for="foreign_money">Попросить денег</label><input type="text" name="foreign_money" value="" id="foreign_money"/>
+        </div>
+      </div>
+      <div class="clear">&nbsp;</div>
+      <input type="submit" name="sOk" value="Отправить" id="sOk"/>
+    </form>
+    <% end %>
+  </body>
+</html>

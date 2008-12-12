@@ -3,6 +3,8 @@ require 'exceptions'
 require 'find'
 require 'rules'
 
+REDEEM_COEFF = 1.1
+
 module Monopoly
   def self.available_rules
     conf_rules =  File.dirname(__FILE__) + "/../conf/rules"
@@ -16,6 +18,8 @@ module Monopoly
   end
 
   class Core
+    attr_reader :trade_offers
+
     def initialize(options={})
       if f = options[:save]
         @state = GameState.from_save( f )
@@ -25,6 +29,7 @@ module Monopoly
         @state = GameState.from_js( options[:json], st )
       end
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
+      @trade_offers = {}
     end
   
     def load_save
@@ -49,7 +54,74 @@ module Monopoly
     def make_move dice1, dice2
       @state.make_move dice1, dice2
     end
-    
+
+    def add_offer offer
+      check_offer offer
+      @trade_offers[offer['id']] = offer
+      @state.add_event( "#{get_player(offer['player_id']).name} получил предложение о сделке от #{get_player(offer['from_id']).name}" )
+    end
+
+    def accept_offer pl, offer_id
+      off = get_offer offer_id
+      raise MonopolyGameError, "Player #{pl.name} can't accept offer #{offer_id}" if pl.game_id != off['player_id']
+      check_offer off
+
+      sender  = get_player off['from_id']
+      reciver = get_player off['player_id']
+
+      off['give']['PropertyIDs'].each do |pr|
+        prop = sender.get_property(pr)
+        sender.sell(prop);
+        reciver.add_posession(prop)
+      end
+      off['wants']['PropertyIDs'].each do |pr|
+        prop = reciver.get_property(pr)
+        reciver.sell(prop);
+        sender.add_posession(prop)
+      end
+      reciver.cash += off['give']['Cash']
+      sender.cash  -= off['give']['Cash']
+
+      sender.cash  += off['wants']['Cash']
+      reciver.cash -= off['wants']['Cash']
+
+      @trade_offers.delete(offer_id)
+      @state.add_event( "#{reciver.name} принял сделку #{offer_id} от игрока #{sender.name}")
+    end
+
+    def reject_offer pl, offer_id
+      off = get_offer offer_id
+      raise MonopolyGameError, "Player #{pl.name} can't reject offer #{offer_id}" if pl.game_id != off['player_id']
+
+      offer = @trade_offers.delete(offer_id)
+      @state.add_event( "#{pl.name} отклонил предложение о сделке от #{get_player([offer['from_id']]).name}" )
+    end
+
+    def check_offer offer
+      sender  = get_player offer['from_id']
+      reciver = get_player offer['player_id']
+
+      raise MonopolyGameError, "Player #{sender.name} don't have enough money to give" if sender.cash < offer['give']['Cash']
+      offer['give']['PropertyIDs'].each do |pr|
+        prop = sender.get_property(pr)
+        raise MonopolyGameError, "Player #{sender.name} don't own property #{pr}" if prop.nil?
+        raise MonopolyGameError, "Can't sell property #{prop.Name}" if !prop.can_sell?
+      end
+
+      raise MonopolyGameError, "Player #{reciver.name} don't have enough money to give" if reciver.cash < offer['wants']['Cash']
+      offer['wants']['PropertyIDs'].each do |pr|
+        prop = reciver.get_property(pr)
+        raise MonopolyGameError, "Player #{reciver.name} don't own property #{pr}" if prop.nil?
+        raise MonopolyGameError, "Can't sell property #{reciver.Name}" if !prop.can_sell?
+      end
+    end
+
+    def get_offer offer_id
+      off = @trade_offers[offer_id]
+      raise MonopolyGameError, "Don't have offer #{offer_id}. Unsync?" if off.nil?
+      off
+    end
+
     def start_game
       @state.start_game
     end
@@ -86,14 +158,45 @@ module Monopoly
         @state.kill_player pl
       end
       @state.finish_move
+      @trade_offers = {}
     end
 
     def sell pl, pid
-      prop = pl.property_at( pid )
-      raise MonopolyGameError, "Player #{pl.name} don't have property at position #{pid}" if prop.nil?
+      prop = get_property_for_player pl, pid
       pl.sell( prop )
       pl.cash += prop.Price
       @state.add_event "Игрок #{pl.name} продал карточку #{prop.Name} банку"
+    end
+
+    def deposit pl, position_id
+      prop = get_property_for_player pl, position_id
+
+      if prop.can_sell?
+        prop.deposit = true
+        pl.cash += prop.Price
+        @state.add_event( "Игрок #{pl.name} заложил в банк карточку #{prop.Name}" )
+      else
+        raise MonopolyGameError, "You can't deposit property #{prop.Name}, cause it has factories"
+      end
+    end
+
+    def redeem pl, position_id
+      prop = get_property_for_player pl, position_id
+
+      need_to_pay = (prop.Price*REDEEM_COEFF).ceil
+      if pl.cash >= need_to_pay
+        prop.deposit = false
+        pl.cash -= need_to_pay
+        @state.add_event( "Игрок #{pl.name} выкупил у банка карточку #{prop.Name}" )
+      else
+        raise MonopolyGameError, "You don't have enough money to redeem #{prop.Name}, it costs #{need_to_pay}"
+      end
+    end
+
+    def get_property_for_player pl, position_id
+      prop = pl.property_at( position_id )
+      raise MonopolyGameError, "Player #{pl.name} don't have property at position #{position_id}" if prop.nil?
+      prop
     end
 
     def finish_game

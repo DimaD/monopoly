@@ -16,6 +16,10 @@ class GreedyNetwork < Monopoly::Network
 
   def process_logic
     puts 'process_logic'
+    puts [].to_json
+    puts {}.to_json
+    puts( { "Join" => { "Id" => id,"Rules" => 123, "State" => 321} }.to_json )
+    puts report_json(12, 12, 12)
     if my_move?
       puts '>  make move'
       make_move

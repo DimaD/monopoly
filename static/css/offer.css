@@ -1,0 +1,13 @@
+.wrapper {
+    width: 600px;
+}
+
+.column {
+    width: 300px;
+    float: left;
+}
+
+.clear {
+    width: 100%;
+    clear: both;
+}

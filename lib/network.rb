@@ -15,7 +15,7 @@ module Monopoly
   class Network
     include Enumerable
     include Reports
-    attr_reader :players, :local_player, :local_port, :lock
+    attr_reader :players, :local_player, :local_port, :lock, :last_modified
     attr_writer :local_player
 
     def initialize core, local_port=DEFAULT_PORT
@@ -28,6 +28,7 @@ module Monopoly
       @player_dices = Hash.new { |hash, key| hash[key] = Hash.new() }
       @lock = Mutex.new
       @moved = {}
+      mark_updated
     end
 
     def self.connect_to_server address, name, local_port
@@ -80,6 +81,7 @@ module Monopoly
       else 
         pl = @core.new_player( req.params['name'] )
         @players["#{req.address}:#{req.port}"] = pl
+        mark_updated
         report_join pl.game_id, @core.plain_rules, @core.state
       end
     end
@@ -165,11 +167,115 @@ module Monopoly
 
       @core.finish_move( @local_player )
       @requester.send_all( @players.keys, :finish_move )
+      mark_updated
       @my_dices = nil
+      @trade_offers = {}
+    end
+
+    def make_trade_offer player_id, my_money=0, my_offer=[], foreign_money=0, foreign_offer=[]
+      offer_id = gen_offer_id
+
+      give  = { "Give"  => { "Cash" => my_money,      "PropertyIDs" => my_offer } }.to_json
+      wants = { "Wants" => { "Cash" => foreign_money, "PropertyIDs" => foreign_offer } }.to_json
+      @core.add_offer({
+        'id'        => offer_id,
+        'player_id' => player_id,
+        'wants'     => { "Cash" => foreign_money, "PropertyIDs" => foreign_offer },
+        'give'      => { "Cash" => my_money,      "PropertyIDs" => my_offer },
+        'from'      => @local_player.name,
+        'from_id'   => @local_player.game_id,
+      })
+      @requester.send_all( @players.keys, :trade_offer, offer_id, player_id, give, wants )
+    end
+
+    def gen_offer_id
+      rand(10000)
     end
 
     def buy req
       @core.buy_card( get_player_for_request(req) )
+      ok
+    end
+
+    def trade_offer req
+      pl = get_player_for_request req
+      return report_player_unknown if pl.nil?
+
+      offer_id = Integer(req.param('ID'))
+      @core.add_offer( parse_trade_offer( pl, req.params ) )
+      mark_updated
+      ok
+    end
+
+    def deposit_card id
+      @core.deposit(@local_player, id)
+      @requester.send_all( @players.keys, :deposit, id )
+    end
+
+    def redeem_card id
+      @core.redeem(@local_player, id)
+      @requester.send_all( @players.keys, :redeem, id )
+    end
+
+    def deposit req
+      pl = get_player_for_request req
+      return report_player_unknown if pl.nil?
+
+      @core.deposit( pl, Integer(req.param('Position')) )
+      return ok
+    end
+
+    def redeem req
+      pl = get_player_for_request req
+      return report_player_unknown if pl.nil?
+
+      @core.redeem( pl, Integer(req.param('Position')) )
+      return ok
+    end
+
+    def parse_trade_offer pl, params
+      parsed = {
+        'id'        => Integer(params['ID']),
+        'player_id' => Integer(params['PlayerID']),
+        'wants'     => JSON.parse(params['Wants'])["Wants"],
+        'give'      => JSON.parse(params['Give'])['Give'],
+        'from'      => pl.name,
+        'from_id'   => pl.game_id,
+      }
+      %w(give wants).each do |e|
+        parsed[e]['PropertyIDs'] ||= []
+        parsed[e]['Cash'] ||= 0
+      end
+      p parsed
+      parsed
+    end
+
+    def make_accept_offer offer_id
+      @core.accept_offer(@local_player, offer_id)
+      @requester.send_all( @players.keys, :accept_offer, offer_id )
+    end
+
+    def make_reject_offer offer_id
+      @core.reject_offer(@local_player, offer_id)
+      @requester.send_all( @players.keys, :reject_offer, offer_id )
+    end
+
+    def assert_offer req
+      id = Integer(req.param('ID'))
+      pl = get_player_for_request req
+      return report_player_unknown if pl.nil?
+
+      @core.accept_offer(pl, id)
+      ok
+    end
+
+    def reject_offer req
+      id = Integer(req.param('ID'))
+      return report_unknown_offer if @trade_offers[id].nil?
+      pl = get_player_for_request
+      return report_player_unknown if pl.nil?
+
+      @core.reject_offer(pl, id)
       ok
     end
 
@@ -221,6 +327,7 @@ module Monopoly
 
     def sell_card pos_id
       @core.sell( @local_player, pos_id )
+      mark_updated
       @requester.send_all( @players.keys, :sell, pos_id )
     end
 
@@ -233,6 +340,7 @@ module Monopoly
 
       @core.sell(pl, pos)
 
+      mark_updated
       ok
     end
 
@@ -250,6 +358,7 @@ module Monopoly
 
     def notify_ready req
       res = set_ready req, true
+      mark_updated
       if can_start? && !@local_player.first_player?
         @core.start_game
       end
@@ -264,6 +373,7 @@ module Monopoly
       pl = @players["#{request.address}:#{request.port}"]
       if !pl.nil?
         pl.ready = ready
+        mark_updated
         ok
       else
         report_player_unknown
@@ -338,6 +448,18 @@ module Monopoly
     def to_array_int str
       JSON.parse(str)
     end
+
+    def mark_updated
+      @last_modified = Time.now.to_i
+    end
+
+    def trade_offers
+      @core.trade_offers
+    end
+
+    def mine_trade_offers
+      @core.trade_offers.values.select { |e| e['player_id'] == @local_player.game_id }
+    end
   end
 
   class Request
@@ -383,6 +505,18 @@ module Monopoly
 
     def sell address, id
       get address, 'Sell', { 'Position' => id }
+    end
+
+    def trade_offer address, offer_id, player_id, give, wants
+      get address, 'TradeOffer', { 'ID' => offer_id, 'PlayerID' => player_id, 'Give' => give, 'Wants' => wants }
+    end
+
+    def accept_offer address, offer_id
+      get address, 'AssertOffer', { 'ID' => offer_id }
+    end
+
+    def reject_offer address, offer_id
+      get address, 'RejectOffer', { 'ID' => offer_id }
     end
 
     def get addr, url, params={}

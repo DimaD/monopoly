@@ -40,9 +40,9 @@ function add_player(pl){
   if (pl.Possession) {
     for (var i=0; i < pl.Possession.length; i++) {
       p = pl.Possession[i];
-      console.log(p);
       _properties[p.PropertyId]["owner"] = pl;
-      _properties[p.PropertyId]["factories"] = p.Factories || 0;    
+      _properties[p.PropertyId]["factories"] = p.Factories || 0;
+      _properties[p.PropertyId]["deposit"] = p.Deposit;
     }
   }
 
@@ -96,13 +96,85 @@ function property_tooltip(){
   str += '<div class="body">';
     if (prop.owner) {
       str += '<p>Хозяин: ' + prop.owner.Name + '</p>';
-      str += '<p>Стоимость посещения: <strong>' + prop['Rent' + prop.factories] + '</strong> (' + prop.factories + ')</p>';
+      str += '<p>Стоимость посещения: <strong>' + visiting_price(prop) + '</strong> (' + prop.factories + ')</p>';
+      if (prop.deposit)
+        str += '<p><strong>заложена в банк</strong></p>';
     }
     str += '<p>Цена: <strong>' + prop.Price + '</strong></p>';
-    str += '<p>Цена посещения: '  + prop.Rent0 + '</p>';
+    str += '<p>Цена посещения без магазинов: '  + prop.Rent0 + '</p>';
     str += '<p>Цена за 1 магазин: ' + prop.Rent1 + '</p>';
     str += '<p>Цена за 2 магазина: '  + prop.Rent2 + '</p>';
     str += '<p>Цена за 3 магазина: '  + prop.Rent3 + '</p>';
   str += '</div>';
   return str;
 }
+
+function visiting_price(prop) {
+  if (prop.deposit) {
+    return 0;
+  } else {
+    return prop['Rent' + prop.factories];
+  }
+}
+
+function load_trade_offers(offers){
+  set_reload_lock();
+  jQuery.facebox(gen_offers_html(offers));
+  $(document).bind('close.facebox', free_reload_lock)
+}
+
+function gen_offers_html(offers) {
+  var str = "";
+  for (var i=0; i < offers.length; i++) {
+    var offer = offers[i];
+    str += gen_offer_html(offer);
+  }
+  return str;
+}
+
+function gen_offer_html(offer){
+  var res = "<form action='offer/" + offer.id + "' method='POST'>";
+  res += "<h3>Предложение от игрока " + offer.from + "</h3>";
+  res += "<h4>Предлагает</h4>";
+    if (offer.give.Cash != 0)
+      res += "деньги: " + offer.give.Cash + " у.е.<br></br>";
+    if (offer.give.PropertyIDs.length > 0)
+      res += "карточки: " + gen_names_for_properties(offer.give.PropertyIDs);
+  res += "<h4>Просит</h4>";
+  if (offer.wants.Cash != 0)
+    res += "деньги: " + offer.wants.Cash + " у.е.<br></br>";
+  if (offer.wants.PropertyIDs.length > 0)
+    res += "карточки: " + gen_names_for_properties(offer.wants.PropertyIDs);
+  res += "<input type='submit' name='sOk' value='Принять'></imput>&nbsp;<input type='submit' name='sCancel' value='Отказать'></input></form>";
+  res += "<hr></hr>";
+  return res;
+}
+
+function gen_names_for_properties(ids){
+  props = [];
+  for (var i=0; i < ids.length; i++)
+    props.push(_properties[ids[i]].Name);
+  return props.join(", ")
+}
+
+function set_reload_lock(){
+  _mega_lock = true;
+}
+
+function free_reload_lock(){
+  _mega_lock = false;
+}
+
+
+$(function(){
+  $('.offers').each(function(){
+    var id = parseInt( this.id.replace('offer_', '') )
+    $(this).show();
+    $(this).fancybox({
+      'frameWidth' : 610,
+      'overlayShow': true,
+      'itemLoadCallback': function(opts){ opts.itemArray.push( { 'url': 'offerwith/' + id, title: "Предложить сделку" }) }
+    });
+  });
+
+});

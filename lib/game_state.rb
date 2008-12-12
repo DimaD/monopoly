@@ -23,8 +23,8 @@ module Monopoly
     #   end
     # end
 
-    def to_json
-      JSON.pretty_generate({"State" => @state})
+    def to_json(*a)
+      { "State" => @state }.to_json(*a)
     end
     
     def self.from_save(s="default")
