@@ -91,10 +91,12 @@ module Monopoly
 
     def reject_offer pl, offer_id
       off = get_offer offer_id
+
       raise MonopolyGameError, "Player #{pl.name} can't reject offer #{offer_id}" if pl.game_id != off['player_id']
 
+
       offer = @trade_offers.delete(offer_id)
-      @state.add_event( "#{pl.name} отклонил предложение о сделке от #{get_player([offer['from_id']]).name}" )
+      @state.add_event( "#{pl.name} отклонил предложение о сделке от #{get_player(offer['from_id']).name}" )
     end
 
     def check_offer offer

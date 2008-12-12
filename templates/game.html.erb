@@ -44,8 +44,11 @@
   <ol>
   <% @network.players.each_pair do |k, v| %>
     <li class="player_info" id="player_info_<%= v.game_id %>"><%= v %> (<%= v.cash %>/<%= v.position_id %>) 
-      <br /><% if v.ready %>готов<% else %>не готов<% end %>
-      <br /><span id="offer_<%= v.game_id %>" class="offers hand" style="display:none;">предложить сделку</span>
+      <% if !@core.game_started? %>
+        <br /><% if v.ready %>готов<% else %>не готов<% end %>
+      <% else %>
+        <br /><span id="offer_<%= v.game_id %>" class="offers hand" style="display:none;">предложить сделку</span>
+      <% end %>
       <% if !v.posession.empty? %>
         <h5>Владения</h5>
         <ul>
@@ -91,7 +94,7 @@
     showURL: false
   });
 
-  <% if !@network.trade_offers.blank? %>
+  <% if !@network.mine_trade_offers.blank? %>
     var _trade_offers = <%= @network.mine_trade_offers.to_json %>;
     load_trade_offers(_trade_offers);
   <% end %>

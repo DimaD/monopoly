@@ -271,8 +271,7 @@ module Monopoly
 
     def reject_offer req
       id = Integer(req.param('ID'))
-      return report_unknown_offer if @trade_offers[id].nil?
-      pl = get_player_for_request
+      pl = get_player_for_request req
       return report_player_unknown if pl.nil?
 
       @core.reject_offer(pl, id)
