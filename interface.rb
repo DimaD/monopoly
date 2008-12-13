@@ -7,7 +7,7 @@ require 'cookie_sessions'
 require 'network'
 require 'mhelpers'
 require "delegate"
-
+require 'core_extensions/extend'
 begin
   require 'erubis'
   ERB = Erubis::Eruby
@@ -100,16 +100,23 @@ module Interface::Controllers
   class Index < R '/'
     def get
       @error = !@state.nil? && @state.delete(:error) || false
+      if Interface.get_network
+        Interface.get_network.check_bankrupts
+      end
+      
       if Interface::get_core.nil?
         @rules = Monopoly::available_rules
         render :index
-      else
-        @core = Interface::get_core
-        @network = Interface::get_network
-        @player  = Interface::get_player
+      elsif !Interface.get_network.finished
+        @core      = Interface::get_core
+        @network   = Interface::get_network
+        @player    = Interface::get_player
         @field_map = Interface::get_field_map
-        p @network.players
+
         render :game
+      else
+        @network = Interface::get_network
+        render :finished
       end
     end
   end

@@ -1,5 +1,3 @@
-require 'json'
-
 module Monopoly
   class Player
     attr_reader :name, :game_id, :posession, :cash, :position_id, :ready, :send_join, :in_game
@@ -55,7 +53,17 @@ module Monopoly
     end
 
     def total_actives
-      @posession.filter { |prop| !prop.deposit }.inject(0) { |prop| prop.factories*prop.factory_price + prop.Price }
+      p @posession
+      actives = @posession.select { |prop| !prop.deposit }.map { |prop| prop.factories*prop.factory_price + prop.Price }
+      actives.inject(0) { |mem, var| mem + var }
+    end
+
+    def can_build?(prop)
+      
+    end
+
+    def can_destroy?(prop)
+      
     end
 
     def bankrupt?
@@ -73,19 +81,22 @@ module Monopoly
     end
 
     def to_json(*a)
-      { "Player" => {
-          'Name'         => @name,
-          'Id'           => @game_id,
-          'Ready'        => @ready,
-          'Cash'         => @cash,
-          'Possession'    => @posession.map { |e| e.to_js },
-          'PositionId'   => @position_id,
-        }
-      }.to_json(*a)
+      { "Player" => js }.to_json(*a)
     end
 
     def to_js
-      JSON.generate( self )
+      js.to_json
+    end
+
+    def js
+      {
+        'Name'         => @name,
+        'Id'           => @game_id,
+        'Ready'        => @ready,
+        'Cash'         => @cash,
+        'Possession'   => @posession.map { |e| e.to_js },
+        'PositionId'   => @position_id,
+      }
     end
   end
 end

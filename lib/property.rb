@@ -12,6 +12,10 @@ class Property < OpenStruct
     super || 0
   end
 
+  def factory_price
+    group.FactoryPrice
+  end
+
   def can_sell?
     factories == 0
   end

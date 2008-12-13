@@ -15,7 +15,7 @@ module Monopoly
   class Network
     include Enumerable
     include Reports
-    attr_reader :players, :local_player, :local_port, :lock, :last_modified
+    attr_reader :players, :local_player, :local_port, :lock, :last_modified, :finished, :local_bankrupt
     attr_writer :local_player
 
     def initialize core, local_port=DEFAULT_PORT
@@ -28,6 +28,7 @@ module Monopoly
       @player_dices = Hash.new { |hash, key| hash[key] = Hash.new() }
       @lock = Mutex.new
       @moved = {}
+      @finished = false
       mark_updated
     end
 
@@ -64,13 +65,40 @@ module Monopoly
         if method_name == 'confirm_throw_dice'
           Thread.new(self) { |a| a.lock.synchronize { a.try_to_move } }
         end
-        pl = get_player_for_request request
-        @players.delete("#{request.address}:#{request.port}") if !p.nil? and pl.bankrupt?
+
+        check_bankrupts
 
         return r
       # rescue Exception => e
       #   return error500(e.message)
       end
+    end
+
+    def check_bankrupts
+      if !@local_player.in_game
+        bankrupt_local_player
+      else
+        @players.each_pair do |address, pl|
+          @players.delete(address) if pl.bankrupt?
+        end
+      end
+
+      win_local_player if @players.empty? && !@finished
+    end
+
+    def bankrupt_local_player
+      @local_bankrupt = true
+      end_game
+    end
+
+    def win_local_player
+      @local_bankrupt = false
+      end_game
+    end
+
+    def end_game
+      @finished = true
+      @core.end_game
     end
 
     def join req
@@ -244,8 +272,8 @@ module Monopoly
       parsed = {
         'id'        => Integer(params['ID']),
         'player_id' => Integer(params['PlayerID']),
-        'wants'     => JSON.parse(params['Wants'])["Wants"],
-        'give'      => JSON.parse(params['Give'])['Give'],
+        'wants'     => ActiveSupport::JSON.decode(params['Wants'])["Wants"],
+        'give'      => ActiveSupport::JSON.decode(params['Give'])['Give'],
         'from'      => pl.name,
         'from_id'   => pl.game_id,
       }
@@ -290,6 +318,8 @@ module Monopoly
 
     def finish_move req
       pl = get_player_for_request(req)
+      return report_player_unknown if pl.nil?
+
       @core.finish_move( pl )
       @my_dices = nil
       mark_updated
@@ -444,7 +474,7 @@ module Monopoly
       when 'array[int]'
         to_array_int value
       else
-        JSON.parse value
+        ActiveSupport::JSON.decode(value)
       end
     end
 
@@ -456,7 +486,7 @@ module Monopoly
     end
 
     def to_array_int str
-      JSON.parse(str)
+      ActiveSupport::JSON.decode(str)
     end
 
     def mark_updated
@@ -517,6 +547,14 @@ module Monopoly
       get address, 'Sell', { 'Position' => id }
     end
 
+    def deposit address, position_id
+      get address, 'Deposit', { 'Position' => position_id }
+    end
+
+    def redeem address, position_id
+      get address, 'Redeem', { 'Position' => position_id }
+    end
+
     def trade_offer address, offer_id, player_id, give, wants
       get address, 'TradeOffer', { 'ID' => offer_id, 'PlayerID' => player_id, 'Give' => give, 'Wants' => wants }
     end
@@ -539,7 +577,7 @@ module Monopoly
       raise RequestError if res.nil?
 
       if ( res.content_type == 'application/javascript' )
-        js = JSON.parse(res.body())
+        js = ActiveSupport::JSON.decode(res.body())
         raise RequestError, js['Error']['Message'] if error?(js)
         return js
       end

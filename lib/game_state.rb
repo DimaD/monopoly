@@ -80,7 +80,7 @@ module Monopoly
       props = @rules.properties
 
       @groups = {}
-      @state["Groups"].each do |gr|
+      @rules.groups.each do |gr|
         g = OpenStruct.new(gr)
         @groups[g.Id] = g
       end
@@ -94,7 +94,11 @@ module Monopoly
           property = props.find { |pr| pr["Id"] == po.PropertyId }
           raise RulesError, "No property with id #{pos.PropertyId}" if property.nil?
           po.property = Property.new(property)
-          po.property.factory_price = @groups[po.property.GroupId]
+          gr = @groups[po.property.GroupId]
+          raise MonopolyGameError, "No such group #{po.property.GroupId}" if gr.nil?
+          gr.properties ||= 0
+          gr.properties += 1
+          po.property.group = gr
           po.property.position_id = po.Id
 
           @properties_by_group[po.property.GroupId] << po.property
@@ -149,8 +153,10 @@ module Monopoly
     end
 
     def kill_player pl
-      add_event "Игрок #{pl.Name} обанкротился и вышел из игры"
+      add_event "Игрок #{pl.name} обанкротился и вышел из игры"
       pl.kill
+      p @state["Players"]
+      p pl
       @state["Players"].reject! { |player| player.game_id == pl.game_id }
       @players.delete( pl.game_id )
     end
@@ -158,12 +164,14 @@ module Monopoly
     def set_player player
       @state["Players"] << player
       @players[player.game_id] = player
+      p @state["Players"]
       player
     end
 
     def translate_to_objects pls
       players = pls.clone
-      players.each { |pl|
+      @state["Players"] = []
+      players.map { |pl|
         e = pl["Player"]
         get_player_or_new e["Id"], e["Name"], false, e["Cash"], e["PositionId"], e["Possession"]
       }

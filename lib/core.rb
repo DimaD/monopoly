@@ -30,6 +30,7 @@ module Monopoly
       end
       @methods = YAML.load( File.new( File.dirname(__FILE__) + "/../conf/methods.yml" ) )
       @trade_offers = {}
+      @game_stoped = false
     end
   
     def load_save
@@ -103,14 +104,20 @@ module Monopoly
       sender  = get_player offer['from_id']
       reciver = get_player offer['player_id']
 
-      raise MonopolyGameError, "Player #{sender.name} don't have enough money to give" if sender.cash < offer['give']['Cash']
+      give_cash = offer['give']['Cash']
+      if give_cash != 0 and sender.cash < give_cash
+        raise MonopolyGameError, "Player #{sender.name} don't have enough money to give"
+      end
       offer['give']['PropertyIDs'].each do |pr|
         prop = sender.get_property(pr)
         raise MonopolyGameError, "Player #{sender.name} don't own property #{pr}" if prop.nil?
         raise MonopolyGameError, "Can't sell property #{prop.Name}" if !prop.can_sell?
       end
 
-      raise MonopolyGameError, "Player #{reciver.name} don't have enough money to give" if reciver.cash < offer['wants']['Cash']
+      wants_cash = offer['wants']['Cash']
+      if wants_cash != 0 and reciver.cash < wants_cash
+        raise MonopolyGameError, "Player #{reciver.name} don't have enough money to give"
+      end
       offer['wants']['PropertyIDs'].each do |pr|
         prop = reciver.get_property(pr)
         raise MonopolyGameError, "Player #{reciver.name} don't own property #{pr}" if prop.nil?
@@ -134,7 +141,7 @@ module Monopoly
 
     def my_move? lp
       pl = @state.get_player_for_turn
-      !pl.nil? && (pl.game_id == lp.game_id )
+      !pl.nil? && !lp.nil? && (pl.game_id == lp.game_id )
     end
 
     def can_buy? lp
@@ -155,7 +162,7 @@ module Monopoly
     end
 
     def finish_move pl
-      raise MonopolyGameError, "не твой ход" if !my_move?(pl)
+      raise MonopolyGameError, "не твой ход" if !my_move?(pl) && !pl.bankrupt?
       if pl.bankrupt?
         @state.kill_player pl
       end
@@ -201,6 +208,10 @@ module Monopoly
       prop
     end
 
+    def end_game
+      @game_stoped = true
+    end
+
     def finish_game
       @finished = true
     end
@@ -238,7 +249,7 @@ module Monopoly
     end
 
     def game_started?
-      @state.game_started?
+      !@game_stoped && @state.game_started?
     end
 
     def properties
