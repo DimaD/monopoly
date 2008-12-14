@@ -1,11 +1,6 @@
 #!/usr/local/bin/ruby
 $: << "./lib"
 require 'optparse'
-require 'rubygems'
-
-require 'greedy_network'
-require 'mhelpers'
-require "delegate"
 
 options = {
   :port => 9999,
@@ -43,17 +38,24 @@ def connect_to_server
 end
 
 if __FILE__ == $0
-  require 'mongrel'
+  require "rubygems"
   require 'monopoly_handler'
-  
+  require 'mongrel'
+  require 'greedy_network'
   config = Mongrel::Configurator.new :host => options[:address] do
     listener :port => options[:port] do
       debug "/", what = [:access]
-      uri "/static", :handler => Mongrel::DirHandler.new("static")
       uri "/", :handler => Mongrel::MonopolyHandler.new() { get_network }
     end
   end
-  puts "Starting bot on port #{options[:port]}..."
-  get_network
-  config.run.join()
+  begin
+    puts "Starting bot on port #{options[:port]}..."
+    get_network
+
+    config.run.join()
+  rescue Errno::ECONNREFUSED => e
+    puts "Не могу соединиться с сервером #{$options[:host]}"
+  rescue Exception => e
+    puts e.message
+  end
 end

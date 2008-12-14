@@ -84,6 +84,7 @@ module Monopoly
       @rules.groups.each do |gr|
         g = OpenStruct.new(gr)
         @groups[g.Id] = g
+        g.properties_a = []
       end
 
       @positions = {}
@@ -99,6 +100,7 @@ module Monopoly
           raise MonopolyGameError, "No such group #{po.property.GroupId}" if gr.nil?
           gr.properties ||= 0
           gr.properties += 1
+          gr.properties_a << po.property
           po.property.group = gr
           po.property.position_id = po.Id
           po.property.sell_coeff = factory_sell_coeff

@@ -156,6 +156,7 @@ module Monopoly
     end
 
     def my_move? lp
+      return false if !game_started?
       pl = @state.get_player_for_turn
       !pl.nil? && !lp.nil? && (pl.game_id == lp.game_id )
     end

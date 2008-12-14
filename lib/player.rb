@@ -63,9 +63,9 @@ module Monopoly
       group, in_group = get_in_group prop
       return false if in_group.size != group.properties
 
-      max = in_group.map { |e| e.factories }.max
+      min = in_group.reject { |e| e.Id == prop.Id }.map { |e| e.factories }.min
 
-      (prop.factories <= max) and ((prop.factories + 1) < 4) and (cash >= prop.factory_price)
+      (prop.factories <= min) and ((prop.factories + 1) < 4) and (cash >= prop.factory_price)
     end
 
     def can_destroy?(prop)
@@ -92,6 +92,23 @@ module Monopoly
       @posession.each { |p| remove_posession(p) }
       @ready = false
       @in_game = false
+    end
+
+    def needs_props
+      grouped = Hash.new { |h, k| h[k] = [] }
+      @posession.each { |p| grouped[p.GroupId] << p }
+
+      needs = []
+      grouped.keys.each do |e|
+        a = grouped[e]
+        if !a.nil? and a.size > 0
+          g = a[0].group
+          if a.size >= ( g.properties / 2 )
+            needs << (g.properties_a - a)
+          end
+        end
+      end
+      return needs.flatten
     end
 
     def to_s

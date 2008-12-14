@@ -100,7 +100,7 @@ module Interface::Controllers
   class Index < R '/'
     def get
       @error = !@state.nil? && @state.delete(:error) || false
-      if Interface.get_network
+      if Interface.get_network && Interface::get_core.game_started?
         Interface.get_network.check_bankrupts
       end
       
