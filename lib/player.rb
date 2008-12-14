@@ -53,7 +53,6 @@ module Monopoly
     end
 
     def total_actives
-      p @posession
       actives = @posession.select { |prop| !prop.deposit }.
                 map { |prop| (prop.sell_coeff*prop.factories*prop.factory_price).ceil + prop.Price }
       actives.inject(0) { |mem, var| mem + var }

@@ -100,6 +100,11 @@ module Interface::Controllers
   class Index < R '/'
     def get
       @error = !@state.nil? && @state.delete(:error) || false
+      if Interface.get_network && !Interface.get_network.synced
+        @message = Interface.get_network.fail_reason
+        render :unsync
+        return
+      end
       if Interface.get_network && Interface::get_core.game_started?
         Interface.get_network.check_bankrupts
       end

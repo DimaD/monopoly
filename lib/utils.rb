@@ -58,7 +58,6 @@ module Reports
   end
 
   def report_json obj
-    p obj
     [ 200, { "Content-Type" => 'application/javascript' }, obj.to_json ]
   end
 

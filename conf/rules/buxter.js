@@ -191,7 +191,7 @@
 					"Id" : 30,
 					"PropertyId" : -1,
 					"IsEvent" : false,
-					"IsJail" : true
+					"IsJail" : false
 				},
 				{
 					"Id" : 31,

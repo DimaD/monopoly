@@ -15,7 +15,7 @@ module Monopoly
   class Network
     include Enumerable
     include Reports
-    attr_reader :players, :local_player, :local_port, :lock, :last_modified, :finished, :local_bankrupt
+    attr_reader :players, :local_player, :local_port, :lock, :last_modified, :finished, :local_bankrupt, :synced, :fail_reason
     attr_writer :local_player
 
     def initialize core, local_port=DEFAULT_PORT
@@ -29,6 +29,8 @@ module Monopoly
       @lock = Mutex.new
       @moved = {}
       @finished = false
+      @synced = true
+      @fail_reason = ''
       mark_updated
     end
 
@@ -70,8 +72,9 @@ module Monopoly
 
         return r
       rescue Exception => e
-        # надо тут что-то сделать
-        # Thread.new(self) { throw MonopolySyncError, e.message }
+        @synced = false
+        @fail_reason = e.message
+        
         return error500(e.message)
       end
     end
@@ -153,8 +156,6 @@ module Monopoly
         d1 = calc_dice( dices.map { |d| d[0] }.push( mydices[0] ) )
         d2 = calc_dice( dices.map { |d| d[1] }.push( mydices[1] ) )
         
-        p dices.map { |d| d[0] }.push( mydices[0] )
-        p dices.map { |d| d[1] }.push( mydices[1] )
         @core.make_move( d1, d2 )
         mark_updated
       end
@@ -164,15 +165,13 @@ module Monopoly
       raise MonopolyGameError, "уже кидал кубики на этом ходу" if !@my_dices.nil?
 
       dices = @requester.send_all( @players.keys, :throw_dice )
-      p dices
+
       my_dices = _get_dices
       @requester.send_all( @players.keys, :confirm_throw_dice, my_dices[0], my_dices[1] )
 
       d1 = calc_dice( dices.map { |d| d["ThrowDice"]["Dice1"] }.flatten.push(my_dices[0]) )
       d2 = calc_dice( dices.map { |d| d["ThrowDice"]["Dice2"] }.flatten.push(my_dices[1]) )
 
-      p dices.map { |d| d["ThrowDice"]["Dice1"] }.flatten.push(my_dices[0])
-      p dices.map { |d| d["ThrowDice"]["Dice2"] }.flatten.push(my_dices[1])
       @core.make_move( d1, d2 )
     end
 
@@ -392,7 +391,7 @@ module Monopoly
 
     def confirm_throw_dice req
       return report_not_started if !@core.game_started?
-      p 'confirm_throw_dice'
+
       turn = @core.turn_number
 
       pl = get_player_for_request req

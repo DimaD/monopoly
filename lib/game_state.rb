@@ -158,8 +158,7 @@ module Monopoly
     def kill_player pl
       add_event "Игрок #{pl.name} обанкротился и вышел из игры"
       pl.kill
-      p @state["Players"]
-      p pl
+
       @state["Players"].reject! { |player| player.game_id == pl.game_id }
       @players.delete( pl.game_id )
     end
@@ -167,7 +166,7 @@ module Monopoly
     def set_player player
       @state["Players"] << player
       @players[player.game_id] = player
-      p @state["Players"]
+
       player
     end
 
