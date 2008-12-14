@@ -143,9 +143,8 @@ function gen_offer_html(offer){
   if (offer.wants.Cash != 0)
     res += "деньги: " + offer.wants.Cash + " у.е.<br></br>";
   if (offer.wants.PropertyIDs.length > 0)
-    res += "карточки: " + gen_names_for_properties(offer.wants.PropertyIDs);
+    res += "карточки: " + gen_names_for_properties(offer.wants.PropertyIDs) + "<br></br>";
   res += "<input type='submit' name='sOk' value='Принять'></imput>&nbsp;<input type='submit' name='sCancel' value='Отказать'></input></form>";
-  res += "<hr></hr>";
   return res;
 }
 

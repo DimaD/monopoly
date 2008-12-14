@@ -125,6 +125,22 @@ module Monopoly
       end
     end
 
+    def buy_factory pl, prop
+      if pl.can_build?(prop)
+        prop.factories += 1
+        pl.cash -= prop.factory_price
+        @state.add_event("Игрок #{pl.name} построил магазин на поле #{prop.Name}")
+      end
+    end
+
+    def sell_factory pl, prop
+       if pl.can_destroy?(prop)
+         prop.factories -= 1
+         pl.cash += (prop.factory_price*@state.factory_sell_coeff).ceil
+         @state.add_event("Игрок #{pl.name} продал магазин на поле #{prop.Name}")
+       end
+    end
+    
     def get_offer offer_id
       off = @trade_offers[offer_id]
       raise MonopolyGameError, "Don't have offer #{offer_id}. Unsync?" if off.nil?

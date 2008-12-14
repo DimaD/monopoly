@@ -7,6 +7,7 @@ require 'player'
 require 'property'
 
 ADD_CIRCLE_MONEY = 2000
+DEFAULT_FACTORY_SELL_COEFF = 1.0
 
 module Monopoly
   class GameState
@@ -100,7 +101,7 @@ module Monopoly
           gr.properties += 1
           po.property.group = gr
           po.property.position_id = po.Id
-
+          po.property.sell_coeff = factory_sell_coeff
           @properties_by_group[po.property.GroupId] << po.property
         end
         @positions[po.Id] = po
@@ -272,6 +273,10 @@ module Monopoly
 
     def game_started?
       @state["Turn"] > 0;
+    end
+
+    def factory_sell_coeff
+      @rules.factory_sell_coeff || DEFAULT_FACTORY_SELL_COEFF
     end
   end
 end

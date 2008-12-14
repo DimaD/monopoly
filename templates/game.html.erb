@@ -5,7 +5,6 @@
 <% end %>
 
 <div class="span-24 last">
-aaaaa:<%= @network.finished %>
   <% if @field_map[:type] == :square %>
     <%= render 'square_map', false %>
   <% else %>
@@ -31,13 +30,14 @@ aaaaa:<%= @network.finished %>
           <a href="redeem/<%= pos.position_id %>">Выкупить у банка</a>
         <% elsif pos.can_sell? %>
           <a href="deposit/<%= pos.position_id %>">Заложить в банк</a>
-          <% if @player.can_build?(pos) %>
-          <a href="buyfactory/<%= pos.position_id %>">Построить магазин</a>
-          <% end %>
-          <% if @player.can_destroy?(pos) %>
-          <a href="destroyfactory/<%= pos.position_id %>">Продать магазин</a>
-          <% end %>
         <% end %>
+        <% if @player.can_build?(pos) %>
+          <a href="buyfactory/<%= pos.position_id %>">Построить магазин</a>
+        <% end %>
+        <% if @player.can_destroy?(pos) %>
+          <a href="destroyfactory/<%= pos.position_id %>">Продать магазин</a>
+        <% end %>
+        
       )</li>
     <% end %>
     </ul>  

@@ -17,7 +17,7 @@
           <% if !@local_player.posession.blank? %>
             <ul>
             <% for pos in @local_player.posession %>
-              <li><label><input type="checkbox" name="my_offer" value="<%= pos.Id %>"></input> <%= pos.Name %></label></li>
+              <li><label><% if pos.can_sell? %><input type="checkbox" name="my_offer" value="<%= pos.Id %>"></input><% end %> <%= pos.Name %></label></li>
             <% end %>
             </ul>
           <% end %>
@@ -29,7 +29,7 @@
           <% if !@player.posession.blank? %>
             <ul>
             <% for pos in @player.posession %>
-              <li><label><input type="checkbox" name="foreign_offer" value="<%= pos.Id %>"></input><%= pos.Name %></label></li>
+              <li><label><% if pos.can_sell? %><input type="checkbox" name="foreign_offer" value="<%= pos.Id %>"></input><% end %> <%= pos.Name %></label></li>
             <% end %>
             </ul>
           <% end %>

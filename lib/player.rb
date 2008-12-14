@@ -49,23 +49,41 @@ module Monopoly
       raise MonopolyGameError, "Can't remove posession with factories" if pos.factories > 0
   
       pos.owner = nil
-      @posession.reject! { |pr| pr.PropertyId == pos.PropertyId }
+      @posession.reject! { |pr| pr.Id == pos.Id }
     end
 
     def total_actives
       p @posession
-      actives = @posession.select { |prop| !prop.deposit }.map { |prop| prop.factories*prop.factory_price + prop.Price }
+      actives = @posession.select { |prop| !prop.deposit }.
+                map { |prop| (prop.sell_coeff*prop.factories*prop.factory_price).ceil + prop.Price }
       actives.inject(0) { |mem, var| mem + var }
     end
 
     def can_build?(prop)
-      
+      group, in_group = get_in_group prop
+      return false if in_group.size != group.properties
+
+      max = in_group.map { |e| e.factories }.max
+
+      (prop.factories <= max) and ((prop.factories + 1) < 4) and (cash >= prop.factory_price)
     end
 
     def can_destroy?(prop)
-      
+      group, in_group = get_in_group prop
+      return false if in_group.size != group.properties
+      return false if prop.factories == 0
+
+      max = in_group.map { |e| e.factories }.max
+      max <= prop.factories
     end
 
+    def get_in_group prop
+      group = prop.group
+      gid   = group.Id
+      in_group = @posession.select { |pr| pr.group.Id == gid }
+      raise MonopolyGameError, "Player #{name} don't own property #{prop.Name}" if !in_group.include?(prop)
+      [group, in_group]
+    end
     def bankrupt?
       @cash <= 0 and @cash.abs > total_actives
     end
@@ -85,7 +103,7 @@ module Monopoly
     end
 
     def to_js
-      js.to_json
+      self.to_json
     end
 
     def js

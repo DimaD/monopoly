@@ -69,8 +69,10 @@ module Monopoly
         check_bankrupts
 
         return r
-      # rescue Exception => e
-      #   return error500(e.message)
+      rescue Exception => e
+        # надо тут что-то сделать
+        # Thread.new(self) { throw MonopolySyncError, e.message }
+        return error500(e.message)
       end
     end
 
@@ -266,6 +268,49 @@ module Monopoly
       @core.redeem( pl, Integer(req.param('Position')) )
       mark_updated
       return ok
+    end
+
+    def buy_factory_local posid
+      prop = @local_player.property_at(posid)
+      raise "Player #{@local_player.name} don't own property #{posid}" if prop.nil?
+
+      @core.buy_factory( @local_player, prop )
+      @requester.send_all( @players.keys, :buy_factory, prop.position_id )
+      mark_updated
+    end
+
+    def destroy_factory_local posid
+      prop = @local_player.property_at(posid)
+      raise "Player #{@local_player.name} don't have property #{posid}" if prop.nil?
+
+      @core.sell_factory( @local_player, prop )
+      @requester.send_all( @players.keys, :sell_factory, prop.position_id )
+      mark_updated
+      
+    end
+
+    def buy_factory req
+      pl = get_player_for_request req
+      return report_player_unknown if pl.nil?
+
+      id = Integer( req.param('Position') )
+      prop = pl.property_at( id )
+      raise "Player #{pl.name} don't have property #{propid}" if prop.nil?
+      
+      @core.buy_factory( pl, prop )
+      ok
+    end
+
+    def sell_factory req
+      pl = get_player_for_request req
+      return report_player_unknown if pl.nil?
+
+      id = Integer( req.param('Position') )
+      prop = pl.property_at( id )
+      raise "Player #{pl.name} don't have property #{propid}" if prop.nil?
+      
+      @core.sell_factory( pl, prop )
+      ok
     end
 
     def parse_trade_offer pl, params
@@ -553,6 +598,14 @@ module Monopoly
 
     def redeem address, position_id
       get address, 'Redeem', { 'Position' => position_id }
+    end
+
+    def buy_factory address, position_id
+      get address, 'BuyFactory', { 'Position' => position_id }
+    end
+
+    def sell_factory address, position_id
+      get address, 'SellFactory', { 'Position' => position_id }
     end
 
     def trade_offer address, offer_id, player_id, give, wants

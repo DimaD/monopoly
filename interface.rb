@@ -196,11 +196,11 @@ module Interface::Controllers
       elsif !Interface::get_network.my_move?
         @state[:error] = 'Нельзя закончить ход, пока не пришел ваш ход'
       else
-        # begin
+        begin
           Interface::get_network.finish_my_move
-        # rescue Exception => e
-        #     @state[:error] = e.message
-        # end
+        rescue Exception => e
+          @state[:error] = e.message
+        end
       end
 
       redirect Index
@@ -216,11 +216,11 @@ module Interface::Controllers
       elsif !Interface::get_network.my_move?
         @state[:error] = 'Нельзя кидать кубики, пока не пришел ваш ход'
       else
-        # begin
+        begin
           Interface::get_network.make_move
-        # rescue Exception => e
-        #     @state[:error] = e.message
-        # end
+        rescue Exception => e
+           @state[:error] = e.message
+        end
       end
       redirect Index
     end
@@ -271,13 +271,40 @@ module Interface::Controllers
 
   class Offer < R '/offer/(\d+)'
     def post id
-      if check_started
-        offer_id = Integer(id)
-        if @input['sOk']
-          Interface.get_network.make_accept_offer(offer_id)
-        elsif @input['sCancel']
-          Interface.get_network.make_reject_offer(offer_id)
+      begin
+        if check_started
+          offer_id = Integer(id)
+          if @input['sOk']
+            Interface.get_network.make_accept_offer(offer_id)
+          elsif @input['sCancel']
+            Interface.get_network.make_reject_offer(offer_id)
+          end
         end
+      rescue Exception => e
+        @state[:error] = e.message
+      end
+      
+      redirect Index
+    end
+  end
+
+  class BuyFactory < R '/buyfactory/(\d+)'
+    def get propid
+      begin
+        Interface.get_network.buy_factory_local( Integer(propid) )
+      rescue Exception => e
+        @state[:error] = e.message
+      end
+      redirect Index
+    end
+  end
+
+  class DestroyFactory < R '/destroyfactory/(\d+)'
+    def get propid
+      begin
+        Interface.get_network.destroy_factory_local( Integer(propid) )
+      rescue Exception => e
+        @state[:error] = e.message
       end
       redirect Index
     end
@@ -300,13 +327,17 @@ module Interface::Controllers
         @state[:error] = "Надо же хоть что-то в сделке указать"
         redirect ShowOffer
       else
-        my_money = get_money :my_money
-        my_offer = get_offer :my_offer
+        begin
+          my_money = get_money :my_money
+          my_offer = get_offer :my_offer
 
-        foreign_money = get_money :foreign_money
-        foreign_offer = get_offer :foreign_offer
+          foreign_money = get_money :foreign_money
+          foreign_offer = get_offer :foreign_offer
         
-        Interface::get_network.make_trade_offer( Integer(id), my_money, my_offer, foreign_money, foreign_offer )
+          Interface::get_network.make_trade_offer( Integer(id), my_money, my_offer, foreign_money, foreign_offer )
+        rescue Exception => e
+          @state[:error] = e.message
+        end
         render 'offersent', false
       end
     end
