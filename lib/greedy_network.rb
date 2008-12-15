@@ -25,6 +25,12 @@ class GreedyNetwork < Monopoly::Network
   end
 
   def process_logic
+    check_bankrupts
+
+    if @players.empty?
+      @thread.exit
+      raise MonopolyStopGame
+    end
     if @local_player.cash <= MIN_PANIC_MONEY
       return try_to_survive
     end

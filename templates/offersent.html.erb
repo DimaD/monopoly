@@ -4,7 +4,12 @@
     <title>Monopoly</title>
   </head>
   <body>
-    Предложение отправлено
-    <script>top.free_reload_lock()</script>
+    <% if @error.nil? %>
+      Предложение отправлено
+      <script>top.free_reload_lock()</script>
+    <% else %>
+      Плохой запрос:
+      <div class="notice"><%= @error %></div>
+    <% end %>
   </body>
 </html>

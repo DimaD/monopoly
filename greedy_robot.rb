@@ -52,10 +52,22 @@ if __FILE__ == $0
     puts "Starting bot on port #{options[:port]}..."
     get_network
 
-    config.run.join()
+    c = config.run
+    t = Thread.new do
+      while true
+        sleep(2)
+        if get_network.finished
+          config.stop
+          puts get_network.local_bankrupt ? "I have lost. Excuse me, master." : "I have won"
+          exit
+        end
+      end
+    end
+    c.join()
+    t.join()
   rescue Errno::ECONNREFUSED => e
     puts "Не могу соединиться с сервером #{$options[:host]}"
   rescue Exception => e
-    puts e.message
+    # puts e.message
   end
 end

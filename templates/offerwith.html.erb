@@ -15,21 +15,31 @@
         <div id="my" class="column">
           <h4>Мое</h4>
           <% if !@local_player.posession.blank? %>
-            <ul>
+            <ul class="no-bullet">
             <% for pos in @local_player.posession %>
-              <li><label><% if pos.can_sell? %><input type="checkbox" name="my_offer" value="<%= pos.Id %>"></input><% end %> <%= pos.Name %></label></li>
+              <li>
+                <label>
+                <input type="checkbox" name="my_offer" value="<%= pos.Id %>"  <% if !pos.can_sell? %>disabled="disabled"<% end %>></input>
+                  <%= pos.Name %>
+                </label>
+              </li>
             <% end %>
             </ul>
           <% end %>
-          <label for="my_money">Деньги</label><br></br>
+          <label for="my_money">Предложить денег</label><br></br>
           <input type="text" name="my_money" value="" id="my_money"/>
         </div>
         <div id="foreign" class="column">
           <h4><%= @player.name %></h4>
           <% if !@player.posession.blank? %>
-            <ul>
+            <ul class="no-bullet">
             <% for pos in @player.posession %>
-              <li><label><% if pos.can_sell? %><input type="checkbox" name="foreign_offer" value="<%= pos.Id %>"></input><% end %> <%= pos.Name %></label></li>
+              <li>
+                <label>
+                  <input type="checkbox" name="foreign_offer" value="<%= pos.Id %>" <% if !pos.can_sell? %>disabled="disabled"<% end %>></input>
+                  <%= pos.Name %>
+                </label>
+              </li>
             <% end %>
             </ul>
           <% end %>

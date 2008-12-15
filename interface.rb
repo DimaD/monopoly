@@ -354,6 +354,7 @@ module Interface::Controllers
           Interface::get_network.make_trade_offer( Integer(id), my_money, my_offer, foreign_money, foreign_offer )
         rescue Exception => e
           @state[:error] = e.message
+          @error = e.message
         end
         render 'offersent', false
       end

@@ -7,6 +7,9 @@ end
 class MonopolyGameError < Exception
 end
 
+class MonopolyStopGame < Exception
+end
+
 class RequestError < Exception
 end
 

@@ -191,7 +191,7 @@ function load_last_modified(last){
 $(function(){
   $(document).bind('fancybox.close', free_reload_lock);
   $(document).bind('fancybox.start', set_reload_lock);
-  $('.offers').each(function(){
+  $('.make_offer').each(function(){
     var id = parseInt( this.id.replace('offer_', '') )
     $(this).show();
     $(this).fancybox({

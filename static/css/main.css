@@ -63,3 +63,10 @@ table#map tr td.property, table#map tr td.corner {
 .no-bullets li {
     list-style: none;
 }
+
+.make_offer {
+    text-decoration: underline;
+    color: blue;
+    cursor: hand;
+    cursor: pointer;
+}

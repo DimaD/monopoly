@@ -52,7 +52,7 @@
       <% if !@core.game_started? %>
         <br /><% if v.ready %>готов<% else %>не готов<% end %>
       <% else %>
-        <br /><span id="offer_<%= v.game_id %>" class="offers hand" style="display:none;">предложить сделку</span>
+        <br /><span id="offer_<%= v.game_id %>" class="make_offer hand" style="display:none;">предложить сделку</span>
       <% end %>
       <% if !v.posession.empty? %>
         <h5>Владения</h5>
