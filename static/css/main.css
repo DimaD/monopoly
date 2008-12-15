@@ -60,4 +60,6 @@ table#map tr td.property, table#map tr td.corner {
     background-color: chartreuse;
 }
 
-
+.no-bullets li {
+    list-style: none;
+}

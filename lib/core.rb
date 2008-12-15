@@ -285,6 +285,14 @@ module Monopoly
       @state.positions
     end
 
+    def get_player_for_turn
+      @state.get_player_for_turn
+    end
+
+    def surrender pl
+      @state.kill_player pl
+    end
+
     def valid_params? m, params
       return false unless allowed_method? m
 

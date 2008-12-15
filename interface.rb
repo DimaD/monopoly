@@ -157,6 +157,18 @@ module Interface::Controllers
     end
   end
 
+  class Surrender < R '/surrender'
+    def get
+      begin
+        Interface::get_network.surrender_me
+      rescue Exception => e
+        @state[:error] = e.message
+      end
+      
+      redirect Index
+    end
+  end
+
   class BeginGame < R '/begin_game'
     def get
       if Interface::get_core.nil? || Interface::get_network.nil?

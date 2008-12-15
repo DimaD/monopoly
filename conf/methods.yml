@@ -30,4 +30,4 @@ Join:
     name: string
 GetGameStatus:
     GameID: id
-    
+Surrender:

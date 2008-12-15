@@ -203,6 +203,20 @@ module Monopoly
       @trade_offers = {}
     end
 
+    def surrender req
+      pl = get_player_for_request req
+      return report_player_unknown if pl.nil?
+
+      @core.surrender(pl)
+      mark_updated
+      return ok
+    end
+
+    def surrender_me
+      @core.surrender( @local_player )
+      @requester.send_all( @players.keys, :surrender )
+    end
+
     def make_trade_offer player_id, my_money=0, my_offer=[], foreign_money=0, foreign_offer=[]
       offer_id = gen_offer_id
 
@@ -617,6 +631,10 @@ module Monopoly
 
     def reject_offer address, offer_id
       get address, 'RejectOffer', { 'ID' => offer_id }
+    end
+
+    def surrender address
+      get address, 'Surrender'
     end
 
     def get addr, url, params={}

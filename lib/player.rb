@@ -83,8 +83,9 @@ module Monopoly
       raise MonopolyGameError, "Player #{name} don't own property #{prop.Name}" if !in_group.include?(prop)
       [group, in_group]
     end
+
     def bankrupt?
-      @cash <= 0 and @cash.abs > total_actives
+      !@in_game or ( @cash <= 0 and @cash.abs > total_actives )
     end
 
     def kill

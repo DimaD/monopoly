@@ -16,18 +16,22 @@
       <% if i == 0 %>
         Ход:
         <% if @core.game_started? %> 
-          <%= @core.turn_number %>
+          <%= @core.turn_number %> . Ходит игрок <%= @core.get_player_for_turn.name %>
         <% elsif @network.can_start? %>
           <a href="begin_game">Начать игру</a>
           <% if @network.players.empty? %> (одному не интересно, давайте кого-нить подождем?) <% end %>
         <% else %>
           Не все игроки готовы, надо подождать
         <% end %>
-      <% end %>
-      <% if i == 0 and @network.my_move? and @core.game_started? %>
-        <% if !@network.thrown_dices? %><a href="throw">Бросить кубики</a><% end %>
-        <% if @network.can_buy? %><a href="buy">Купить карточку на текущей позиции</a><% end %>
-        <a href="finish_move">Закончить ход</a>
+        <% if @network.my_move? and @core.game_started? %>
+          <% if !@network.thrown_dices? %><a href="throw">Бросить кубики</a><% end %>
+          <% if @network.can_buy? %><a href="buy">Купить карточку на текущей позиции</a><% end %>
+          <a href="finish_move">Закончить ход</a>
+        <% end %>
+        <% if @core.game_started? %>
+          <a href="surrender">Сдаться</a>
+        <% end %>
+        
       <% end %>
     </td>
 
