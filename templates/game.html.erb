@@ -22,6 +22,7 @@
     <% for pos in @player.posession %>
       <li class="<%= class_for_prop pos %>">
       <%= pos.Name %>. магазинов: <%= pos.factories %>, цена прохода: <%= pos.kickback %>
+      <% if @network.my_move? %>
       (
         <% if pos.can_sell? %>
           <a href="sell?id=<%= pos.position_id %>">Продать в банк</a>, 
@@ -38,7 +39,9 @@
           <a href="destroyfactory/<%= pos.position_id %>">Продать магазин</a>
         <% end %>
         
-      )</li>
+      )
+      <% end %>
+      </li>
     <% end %>
     </ul>  
   <% end %>
@@ -52,7 +55,7 @@
       <% if !@core.game_started? %>
         <br /><% if v.ready %>готов<% else %>не готов<% end %>
       <% else %>
-        <br /><span id="offer_<%= v.game_id %>" class="make_offer hand" style="display:none;">предложить сделку</span>
+        <br /><% if @network.my_move? %><span id="offer_<%= v.game_id %>" class="make_offer hand" style="display:none;">предложить сделку</span><% end %>
       <% end %>
       <% if !v.posession.empty? %>
         <h5>Владения</h5>

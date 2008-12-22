@@ -3,7 +3,7 @@ ul.no-bullets li {
 }
 
 .event, .property {
-    width: 50px;
+    width: 20px;
     height: 50px;
 }
 
@@ -33,7 +33,7 @@ table#map tr td.property, table#map tr td.corner {
 }
 
 .group_3 {
-    background-color: blue;
+    background-color: #DEB887;
 }
 
 .group_4 {
@@ -60,6 +60,18 @@ table#map tr td.property, table#map tr td.corner {
     background-color: chartreuse;
 }
 
+.group_10 {
+    background-color: #90EE90;
+}
+
+.group_11 {
+    background-color: #FF6347;
+}
+
+.group_12 {
+    background-color: #EE82EE;
+}
+
 .no-bullets li {
     list-style: none;
 }
@@ -70,3 +82,8 @@ table#map tr td.property, table#map tr td.corner {
     cursor: hand;
     cursor: pointer;
 }
+
+/*.vertical {
+    -webkit-transform: rotate(-90deg);
+    display: block;
+}*/
