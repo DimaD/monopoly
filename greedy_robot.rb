@@ -68,6 +68,6 @@ if __FILE__ == $0
   rescue Errno::ECONNREFUSED => e
     puts "Не могу соединиться с сервером #{$options[:host]}"
   rescue Exception => e
-    # puts e.message
+    puts e.message
   end
 end
