@@ -26,7 +26,7 @@ OptionParser.new("Dmitiry Dzema monopoly client.") do |opts|
   opts.on("-p", "--port PORT", "Port to bind") do |p|
     options[:port] = Integer(p)
   end
-  opts.on("-a", "--host HOST", "Host ot bind to") { |p| options[:host] = p }
+  opts.on("-h", "--host HOST", "Host to bind to") { |p| options[:host] = p }
   opts.on("-d", "--default", "Start with default params") do |p|
     options[:default] = p
   end
